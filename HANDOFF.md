@@ -8,7 +8,7 @@ The dedicated local Git repository is `/Users/arielsmoliar/Documents/ChatGPT/Web
 It is separate from Offsite Captain, Resurface, Flare AI, Stagehand, and loco-agent.
 
 - Branch: `main`
-- Current checkpoint: `22bcd49 docs: add WebMCP host verification runbook`
+- Current checkpoint: `f0e428f polish workflow-first demo interface`
 - Working tree before this final handoff update: clean
 - Git remote: `https://github.com/ArielSmoliar/WebMCP.git`
 - Public repository: `https://github.com/ArielSmoliar/WebMCP`
@@ -85,6 +85,20 @@ returns the existing receipt on replay.
 - Manual fallback when WebMCP is unavailable.
 - Exact-plan authorization and authorization invalidation after mutation.
 - Docker, Render, provenance, and protocol-observation documentation.
+- Full ChatGPT built-in-host lifecycle verification across six capability epochs,
+  including visible state-changing invocation, exact page-only authorization,
+  execution, receipt recovery, host-observed replacement, and stale-handle
+  rejection.
+- Workflow-first interface redesign: persistent Inspect → Repair → Review →
+  Reserve progression; exactly three default proof signals; full evidence behind
+  disclosure; scoped busy feedback; and outcome-first receipt hierarchy.
+- Final independent Impeccable static review: 40/40 with no remaining actionable
+  static-design issues. The initial 29/40 and final 40/40 evidence snapshots are
+  committed under `.impeccable/critique/`.
+- Regression coverage in the existing seven-test suite locks the workflow/proof
+  order, three-signal contract, collapsed evidence, responsive node relocation,
+  scoped busy controls, cache-versioned assets, and absence of an
+  `authorize_plan` tool.
 
 ## Verification Evidence
 
@@ -218,6 +232,13 @@ returns the existing receipt on replay.
   - repaired conflict presented as current;
   - stretched status treatment at 680px;
   - missing favicon request.
+- Commit `f0e428f65ae71637249b13e585aa7e9c83cc243c` is pushed to GitHub
+  `main`. The working tree was clean and synchronized after the push.
+- Post-push production verification confirmed that no automatic deployment
+  occurred: Cloud Run revision `captains-table-webmcp-00009-z6j` still serves
+  100% of traffic and the live HTML still references the pre-redesign asset
+  versions. `/`, `/health`, and `/readyz` passed. Google Frontend returns 404
+  specifically for `/healthz`; use `/health` and `/readyz` for live readiness.
 
 The temporary Python 3.13 verification environment was
 `/private/tmp/captains-table-py313`. The workspace `.venv` uses Python 3.14 and
@@ -229,7 +250,9 @@ Docker image.
 - Native host discovery in the connected Chrome extension. The updated built-in
   browser now proves discovery, state-changing invocation, dynamic replacement,
   stale-handle rejection, authorization separation, and receipt recovery.
-- Real WebMCP discovery acknowledgement and dynamic removal in the target browser.
+- Protocol-native discovery acknowledgement and explicit dynamic-removal
+  acknowledgement. The host lifecycle and stale-handle behavior are verified,
+  but the current API still does not expose these acknowledgements.
 - Local Docker-daemon execution. Cloud Build successfully built the Dockerfile
   for production revisions 8 and 9.
 - The full browser error matrix, concurrent browser tabs, and authorization expiry UI.
@@ -238,10 +261,17 @@ Docker image.
 
 1. Preserve the completed production evidence and avoid creating another
    Firestore session unless a specific new verification requires it.
-2. Add browser automation coverage for the complete journey and failure matrix.
-3. Run a final submission-focused visual audit and capture screenshots/video.
-4. Prepare Devpost text, provenance statement, and submission materials. Do not
-   submit without Ariel's explicit confirmation.
+2. Decide whether to change the standing deployment rule if the committed
+   workflow-first redesign should be released. Current instructions allow
+   deployment only when a verified compatibility defect requires code changes;
+   do not infer deployment approval from generic “continue” language.
+3. If deployment is explicitly approved, deploy commit `f0e428f` to Cloud Run,
+   verify the new revision and 100% traffic, confirm the
+   `impeccable-workflow-1` asset set, and run non-mutating visual/readiness smoke
+   checks before any production workflow mutation.
+4. Add browser automation coverage for the complete journey and failure matrix.
+5. Capture submission screenshots/video and prepare Devpost text and provenance.
+   Do not submit without Ariel's explicit confirmation.
 
 ## Important Boundaries
 
@@ -251,9 +281,13 @@ Docker image.
   runtime is necessary. It is currently deliberately absent.
 - Do not add a standalone MCP server. This demo is about page-scoped WebMCP.
 - Do not claim that same-origin JavaScript proves physical human presence.
-- Do not claim real WebMCP verification until it is exercised in the target browser.
-- Deployment and public repository are already approved and live. Do not submit to
-  Devpost without explicit user confirmation.
+- Real WebMCP host discovery and invocation are verified in the ChatGPT built-in
+  browser. Do not generalize that result to the Chrome extension, and do not
+  claim protocol-native discovery or removal acknowledgement.
+- The public repository and current production revision are live. The committed
+  interface redesign is not deployed. Do not deploy it unless Ariel explicitly
+  changes the compatibility-defect-only deployment rule. Do not submit to Devpost
+  without explicit confirmation.
 
 ## New Session Prompt
 
@@ -262,9 +296,12 @@ Continue the WebMCP hackathon demo in the dedicated repository at
 /Users/arielsmoliar/Documents/ChatGPT/WebMCP. Read HANDOFF.md completely before
 acting, then inspect git status and the latest commits. The public repository is
 https://github.com/ArielSmoliar/WebMCP and the live Cloud Run demo is
-https://captains-table-webmcp-1017459622661.us-east1.run.app. Production revision
-captains-table-webmcp-00009-z6j serves the verified host-lifecycle build plus the
-Chrome WebMCP Origin Trial token, which expires November 16, 2026.
+https://captains-table-webmcp-1017459622661.us-east1.run.app. GitHub `main` is
+clean at commit f0e428f65ae71637249b13e585aa7e9c83cc243c. Production remains
+revision captains-table-webmcp-00009-z6j at 100% traffic; it serves the verified
+host-lifecycle build plus the Chrome WebMCP Origin Trial token, which expires
+November 16, 2026. The workflow-first interface redesign is committed but not
+deployed.
 
 The full built-in-host journey is verified through receipt CT-79ECA1. Preserve
 that evidence while preparing submission materials, screenshots, and video.
@@ -275,8 +312,10 @@ execution, receipt recovery, and
 the stale-capability safety probe. Do not claim host discovery or removal
 acknowledgement from registerTool resolution alone. Record exact evidence in
 HANDOFF.md and docs/protocol-observations.md, fix compatibility issues if found,
-run node --check static/app.js and the seven-test Python suite. Do not deploy,
-push, or submit without explicit approval.
+run node --check static/app.js and the seven-test Python suite. The final local
+Impeccable review is 40/40. Do not deploy the redesign unless I explicitly change
+the standing compatibility-defect-only deployment rule. Do not submit to Devpost
+without explicit confirmation.
 
 Chrome 151 proves page-level enablement but its connected extension exposed only
 pageAssets. The ChatGPT built-in browser separately proved native webmcp host
@@ -311,4 +350,6 @@ cd "/Users/arielsmoliar/Documents/ChatGPT/WebMCP"
 - `docs/protocol-maintainer-feedback.md`
 - `docs/webmcp-host-verification-runbook.md`
 - `.impeccable/critique/2026-08-31T17-23-19Z__docs-interaction-design-md.md`
+- `.impeccable/critique/2026-08-31T23-04-57Z__static-index-html.md`
+- `.impeccable/critique/2026-08-31T23-17-41Z__static-index-html.md`
 - `CHALLENGE_WORK.md`
