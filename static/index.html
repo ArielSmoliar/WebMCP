@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Captain's Table</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232f7f76'/%3E%3Cpath d='M8 10h16M8 16h11M8 22h16' stroke='%23f8f6f1' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/workflow.css">
+</head>
+<body>
+  <a class="skip" href="#decision">Skip to active decision</a>
+  <header class="masthead">
+    <a class="wordmark" href="/">Captain's Table</a>
+    <div class="system-state"><span id="connection-mark" aria-hidden="true"></span><span id="connection">Checking WebMCP</span></div>
+    <div class="revision" aria-label="Current plan revision"><span class="calibration"><i></i><i id="revision-notch"></i></span><span id="revision">R1 · --------</span></div>
+  </header>
+  <main>
+    <section class="brief" aria-labelledby="plan-title">
+      <p class="eyebrow">New York · October 12–14</p>
+      <h1 id="plan-title">A decision surface shared with ChatGPT.</h1>
+      <p class="lede">Inspect the plan, repair its constraint, and keep consequential approval in human hands.</p>
+      <dl class="constraints"><div><dt>Budget</dt><dd id="plan-budget">$7,200</dd></div><div><dt>People</dt><dd>8</dd></div><div><dt>Late arrival</dt><dd id="plan-arrival">11:40</dd></div></dl>
+    </section>
+
+    <section id="decision" class="decision" aria-labelledby="decision-title">
+      <div class="section-heading"><div><p class="eyebrow">Active decision</p><h2 id="decision-title">Can the roadmap session include everyone?</h2></div><span id="status-label" class="status">Not inspected</span></div>
+      <div id="first-run" class="first-run">
+        <p><strong>Start with the first proof.</strong> Ask ChatGPT to find what blocks this plan.</p>
+        <div class="prompt"><code>Find the most important conflict in this offsite plan.</code><button id="copy-prompt" class="text-button">Copy prompt</button></div>
+        <button id="inspect" class="primary">Inspect conflict manually</button>
+      </div>
+      <ol class="agenda" aria-label="Offsite agenda">
+        <li id="roadmap"><time id="roadmap-time">09:30</time><div><strong>Roadmap decisions</strong><span>All 8 people required</span></div></li>
+        <li><time>12:30</time><div><strong>Working lunch</strong><span>All 8 people</span></div></li>
+        <li><time>14:00</time><div><strong>Operating model</strong><span>6 people required</span></div></li>
+      </ol>
+      <div id="finding" class="finding" hidden tabindex="-1"><p id="finding-label" class="eyebrow">Conflict found</p><h3 id="finding-title"></h3><p id="finding-detail"></p><a id="conflict-jump" href="#finding" class="jump">Jump to conflict</a></div>
+      <section id="comparison" class="workflow-region" hidden aria-labelledby="comparison-title">
+        <div class="region-heading"><div><p class="eyebrow">Feasible repairs</p><h3 id="comparison-title">Two ways to include everyone</h3></div><button id="compare" class="secondary">Compare repairs</button></div>
+        <div class="table-scroll" role="region" aria-label="Repair comparison" tabindex="0"><table><caption class="sr-only">Comparison of two offsite schedule repairs</caption><thead><tr><th scope="col">Measure</th><th scope="col">Shift session</th><th scope="col">Remote access</th></tr></thead><tbody id="comparison-body"></tbody></table></div>
+      </section>
+      <section id="review" class="workflow-region review" hidden aria-labelledby="review-title">
+        <p class="eyebrow">Human authorization</p><h3 id="review-title">You are approving exactly this version.</h3>
+        <div class="review-grid"><div><span>What changes?</span><strong id="review-change"></strong></div><div><span>What does it cost?</span><strong id="review-cost"></strong></div><div><span>What are you authorizing?</span><strong>One simulated offsite reservation</strong></div></div>
+        <label class="arrival">Late arrival <input id="arrival" type="time" min="08:00" max="18:00"><button id="save-arrival" class="secondary">Update arrival</button></label>
+        <p id="review-note" class="note">ChatGPT can prepare this review but cannot authorize it.</p>
+        <div class="actions"><button id="authorize" class="primary">Authorize this version</button><button id="revert" class="text-button">Revert last change</button></div>
+        <details><summary>Technical details</summary><dl class="technical"><div><dt>Plan</dt><dd id="auth-hash"></dd></div><div><dt>Scope</dt><dd>reserve_offsite</dd></div><div><dt>Expiry</dt><dd id="auth-expiry">Created after authorization</dd></div></dl></details>
+      </section>
+      <section id="receipt" class="workflow-region receipt" hidden aria-labelledby="receipt-title"><p class="eyebrow">Reservation confirmed</p><h3 id="receipt-title">The exact authorized plan is reserved.</h3><p class="confirmation" id="confirmation"></p><p>No duplicate action was created if this receipt was recovered.</p></section>
+      <div id="next-actions" class="next-actions"><button id="execute" class="primary">Create reservation</button></div>
+    </section>
+
+    <details class="evidence">
+      <summary>Technical evidence</summary>
+      <div class="evidence-content"><p id="mode-copy"></p><h2 tabindex="-1">Decision trail</h2><ol id="events"><li>No structured actions yet.</li></ol></div>
+    </details>
+  </main>
+  <div id="announcer" class="sr-only" aria-live="polite"></div>
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>
