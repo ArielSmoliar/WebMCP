@@ -53,6 +53,7 @@ def index() -> FileResponse:
     return FileResponse(ROOT / "static" / "index.html")
 
 
+@app.get("/health")
 @app.get("/healthz")
 def health() -> dict[str, str]:
     return {"status": "ok"}

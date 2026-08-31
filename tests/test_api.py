@@ -12,6 +12,7 @@ def client(tmp_path) -> TestClient:
 def test_gate_one_journey(tmp_path):
     web = client(tmp_path)
     assert web.get("/healthz").json() == {"status": "ok"}
+    assert web.get("/health").json() == {"status": "ok"}
     assert web.get("/readyz").json() == {"status": "ready"}
 
     created = web.post("/api/session", json={})

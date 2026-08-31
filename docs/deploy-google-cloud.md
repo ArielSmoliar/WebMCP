@@ -7,12 +7,13 @@ Firestore Native mode. Local development continues to use SQLite by default.
 
 - Cloud Run service: `captains-table-webmcp`
 - Region: `us-east1`
-- Firestore database: `(default)`, Native mode
+- Firestore database: `captains-table`, Native mode
 - Firestore collection: `captains_table_sessions`
 - Runtime service account: `captains-table-webmcp`
 - Public HTTPS ingress; unauthenticated access is required for judges and WebMCP
 
-The runtime service account needs only `roles/datastore.user`. Cloud Run supplies
+The runtime service account receives `roles/datastore.user` through an IAM
+condition that matches only the `captains-table` database. Cloud Run supplies
 Application Default Credentials; do not add a service-account key or set
 `GOOGLE_APPLICATION_CREDENTIALS`.
 
@@ -27,7 +28,7 @@ gcloud services enable run.googleapis.com cloudbuild.googleapis.com \
   --project "$PROJECT_ID"
 
 gcloud firestore databases create \
-  --database="(default)" \
+  --database="captains-table" \
   --location="$REGION" \
   --type=firestore-native \
   --delete-protection \
@@ -39,14 +40,14 @@ gcloud iam service-accounts create captains-table-webmcp \
 
 gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="serviceAccount:captains-table-webmcp@${PROJECT_ID}.iam.gserviceaccount.com" \
-  --role="roles/datastore.user"
+  --role="roles/datastore.user" \
+  --condition="expression=resource.name==\"projects/${PROJECT_ID}/databases/captains-table\",title=CaptainTableDatabaseOnly,description=Restrict runtime access to the Captain Table database"
 ```
 
-If the project already has a `(default)` Firestore database, describe it rather
-than creating another one:
+If the named database already exists, describe it rather than creating it again:
 
 ```bash
-gcloud firestore databases describe --database="(default)" --project "$PROJECT_ID"
+gcloud firestore databases describe --database="captains-table" --project "$PROJECT_ID"
 ```
 
 ## Deploy
@@ -57,7 +58,7 @@ gcloud run deploy captains-table-webmcp \
   --region="$REGION" \
   --project="$PROJECT_ID" \
   --service-account="captains-table-webmcp@${PROJECT_ID}.iam.gserviceaccount.com" \
-  --set-env-vars="CAPTAINS_TABLE_STORAGE=firestore,CAPTAINS_TABLE_FIRESTORE_DATABASE=(default)" \
+  --set-env-vars="CAPTAINS_TABLE_STORAGE=firestore,CAPTAINS_TABLE_FIRESTORE_DATABASE=captains-table" \
   --allow-unauthenticated \
   --min=0 \
   --max=3
@@ -69,7 +70,7 @@ gcloud run deploy captains-table-webmcp \
 SERVICE_URL="$(gcloud run services describe captains-table-webmcp \
   --region="$REGION" --project="$PROJECT_ID" --format='value(status.url)')"
 
-curl --fail-with-body "$SERVICE_URL/healthz"
+curl --fail-with-body "$SERVICE_URL/health"
 curl --fail-with-body "$SERVICE_URL/readyz"
 ```
 
