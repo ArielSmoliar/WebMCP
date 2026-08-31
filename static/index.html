@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Captain's Table</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232f7f76'/%3E%3Cpath d='M8 10h16M8 16h11M8 22h16' stroke='%23f8f6f1' stroke-width='2'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="/static/styles.css?v=protocol-lab-1">
-  <link rel="stylesheet" href="/static/workflow.css?v=protocol-lab-1">
-  <link rel="stylesheet" href="/static/polish.css?v=protocol-lab-1">
+  <link rel="stylesheet" href="/static/styles.css?v=capability-epochs-1">
+  <link rel="stylesheet" href="/static/workflow.css?v=capability-epochs-1">
+  <link rel="stylesheet" href="/static/polish.css?v=capability-epochs-1">
 </head>
 <body>
   <a class="skip" href="#decision">Skip to active decision</a>
@@ -62,14 +62,15 @@
           <div class="protocol-heading"><h2 id="protocol-title">Protocol run</h2><span id="protocol-run-state">Collecting</span></div>
           <dl class="protocol-measures">
             <div><dt>Page lifecycle</dt><dd id="metric-lifecycle">Awaiting WebMCP</dd></div>
+            <div><dt>Capability epoch</dt><dd id="metric-epoch">Awaiting registration</dd></div>
             <div><dt>Agent observation</dt><dd id="metric-agent">Not reported</dd></div>
-            <div><dt>Stale mutations</dt><dd id="metric-stale">Not tested</dd></div>
+            <div><dt>Stale capability calls</dt><dd id="metric-stale">Not tested</dd></div>
             <div><dt>Authorization bypasses</dt><dd id="metric-authorization">Not tested</dd></div>
             <div><dt>Duplicate executions</dt><dd id="metric-idempotency">Not tested</dd></div>
             <div><dt>Median visible update</dt><dd id="metric-latency">No samples</dd></div>
             <div><dt>Receipt recovery</dt><dd id="metric-recovery">Not observed</dd></div>
           </dl>
-          <p class="protocol-method">Page measurements are automatic. Agent observation is explicitly agent-reported because WebMCP does not expose discovery acknowledgement to the page.</p>
+          <p class="protocol-method">Each tool set is bound to its issuing revision. Obsolete callbacks are rejected even if a host retains them. Discovery and removal acknowledgement are not exposed by the current API, so agent observation is explicitly reported.</p>
           <button id="run-protocol-checks" class="secondary">Run safety checks</button>
           <details class="trace"><summary>Raw protocol trace</summary><ol id="protocol-events"><li>No protocol events yet.</li></ol></details>
         </section>
@@ -78,6 +79,6 @@
     </details>
   </main>
   <div id="announcer" class="sr-only" aria-live="polite"></div>
-  <script type="module" src="/static/app.js?v=protocol-lab-1"></script>
+  <script type="module" src="/static/app.js?v=capability-epochs-1"></script>
 </body>
 </html>

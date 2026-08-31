@@ -1,4 +1,4 @@
-const state = { snapshot: null, controller: null, recordedMode: false, protocolBusy: false, currentToolNames: [] };
+const state = { snapshot: null, controller: null, recordedMode: false, protocolBusy: false, currentToolNames: [], capabilityEpoch: null };
 const $ = (id) => document.getElementById(id);
 const wideScreen = window.matchMedia("(min-width: 1100px)");
 
@@ -52,7 +52,7 @@ function renderProtocol() {
   const lifecycle = latestProtocol("tool_set_registered", true);
   const unavailable = latestProtocol("webmcp_unavailable", true);
   const observation = latestProtocol("agent_observation");
-  const stale = latestProtocol("stale_probe", true);
+  const stale = latestProtocol("stale_capability_probe", true) || latestProtocol("stale_probe", true);
   const authorization = latestProtocol("authorization_probe", true);
   const idempotency = latestProtocol("idempotency_probe", true);
   const recovery = latestProtocol("receipt_recovered", true);
@@ -60,6 +60,7 @@ function renderProtocol() {
   const middle = median(durations);
 
   $("metric-lifecycle").textContent = lifecycle ? `${lifecycle.details.registered}/${lifecycle.details.expected} page-accepted` : "Awaiting WebMCP";
+  $("metric-epoch").textContent = state.capabilityEpoch?.label || lifecycle?.details.capability_epoch || `R${state.snapshot.revision} · Manual`;
   $("metric-agent").textContent = observation
     ? observation.details.observed_revision === state.snapshot.revision
       ? `${observation.details.matched}/${observation.details.expected} reported`
@@ -117,29 +118,38 @@ async function request(path, options = {}) {
   return response.json();
 }
 
-async function action(route, body, source = "human") {
+async function action(route, body, source = "human", expectedRevision = state.snapshot.revision, capabilityEpoch = null) {
   clearError();
   setBusy(true);
   const started = performance.now();
   try {
     const snapshot = await request(`/api/session/${state.snapshot.session_id}/${route}`, {
-      method: "POST", body: JSON.stringify({ expected_revision: state.snapshot.revision, source, ...body })
+      method: "POST", body: JSON.stringify({ expected_revision: expectedRevision, source, ...body })
     });
     render(snapshot, true);
     await registerTools();
-    void recordProtocol("action_success", route, performance.now() - started, { source, resulting_state: snapshot.state, plan_hash: snapshot.plan_hash });
+    void recordProtocol("action_success", route, performance.now() - started, { source, expected_revision: expectedRevision, capability_epoch: capabilityEpoch, resulting_state: snapshot.state, plan_hash: snapshot.plan_hash });
     return snapshot;
   } catch (error) {
     showError(error);
-    void recordProtocol("action_error", route, performance.now() - started, { source, error: error.message });
+    void recordProtocol("action_error", route, performance.now() - started, { source, expected_revision: expectedRevision, capability_epoch: capabilityEpoch, error: error.message });
     throw error;
   } finally {
     setBusy(false);
   }
 }
 
-function toolResult(summary, data = {}) {
-  return JSON.stringify({ ok: true, state: state.snapshot.state, revision: state.snapshot.revision, summary, data, ui: { changed: ["decision", "revision", "decision-trail"] } });
+function toolResult(summary, data = {}, registration = state.capabilityEpoch) {
+  return JSON.stringify({ ok: true, state: state.snapshot.state, revision: state.snapshot.revision, summary, data, registration: registration ? { capability_epoch: registration.label, registered_revision: registration.revision, current_revision: state.snapshot.revision, stale: registration.revision !== state.snapshot.revision } : null, ui: { changed: ["decision", "revision", "decision-trail"] } });
+}
+
+function fingerprint(value) {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0").toUpperCase();
 }
 
 function comparisonRows(options) {
@@ -195,13 +205,21 @@ function render(snapshot, changed = false) {
 }
 
 function allowedTools() {
-  const base = [{ name: "inspect_decision", title: "Inspect current decision", description: "Read the active offsite decision and exact revision.", execute: async () => toolResult("Read the current decision.", state.snapshot) }];
-  if (["draft", "conflict", "options", "reviewed", "authorized"].includes(state.snapshot.state)) base.push({ name: "diagnose_plan", title: "Diagnose the plan", description: "Find the single blocking constraint and update the shared surface.", execute: async () => { await action("diagnose", {}, "webmcp"); return toolResult("Found the late-arrival conflict.", state.snapshot.finding); } });
-  if (["conflict", "options", "reviewed"].includes(state.snapshot.state)) base.push({ name: "compare_repairs", title: "Compare repairs", description: "Create two budget-aware repairs for the active conflict.", execute: async () => { await action("repairs", {}, "webmcp"); return toolResult("Compared two feasible repairs.", state.snapshot.options); } });
-  if (["options", "reviewed", "authorized"].includes(state.snapshot.state)) base.push({ name: "select_repair", title: "Select a repair", description: "Select one exact repair. Use shift for the arrival-safe schedule or remote for remote access.", inputSchema: { type: "object", properties: { repair_id: { type: "string", enum: ["shift", "remote"] } }, required: ["repair_id"], additionalProperties: false }, execute: async ({ repair_id }) => { await action("selection", { repair_id }, "webmcp"); return toolResult("Selected a repair."); } });
-  if (state.snapshot.state === "reviewed") base.push({ name: "prepare_authorization", title: "Prepare human review", description: "Focus the exact-plan review. This tool cannot authorize it.", execute: async () => { $("review").scrollIntoView({ behavior: "smooth" }); return toolResult("Human review is ready. Authorization still requires the page control."); } });
-  if (state.snapshot.state === "authorized") base.push({ name: "execute_authorized_plan", title: "Create the authorized reservation", description: "Execute the exact human-authorized plan and return its receipt.", inputSchema: { type: "object", properties: { idempotency_key: { type: "string", minLength: 8 } }, required: ["idempotency_key"], additionalProperties: false }, execute: async ({ idempotency_key }) => { await action("execute", { idempotency_key }, "webmcp"); return toolResult("Created the reservation receipt.", state.snapshot.receipt); } });
+  const registration = { revision: state.snapshot.revision, planHash: state.snapshot.plan_hash, state: state.snapshot.state };
+  const invoke = async (route, body = {}) => action(route, body, "webmcp", registration.revision, registration.label);
+  const read = (summary, data) => {
+    if (registration.revision !== state.snapshot.revision) throw new Error("stale_capability");
+    return toolResult(summary, data, registration);
+  };
+  const base = [{ name: "inspect_decision", title: "Inspect current decision", description: "Read the active offsite decision and exact revision.", execute: async () => read("Read the current decision.", state.snapshot) }];
+  if (["draft", "conflict", "options", "reviewed", "authorized"].includes(state.snapshot.state)) base.push({ name: "diagnose_plan", title: "Diagnose the plan", description: "Find the single blocking constraint and update the shared surface.", execute: async () => { await invoke("diagnose"); return toolResult("Found the late-arrival conflict.", state.snapshot.finding, registration); } });
+  if (["conflict", "options", "reviewed"].includes(state.snapshot.state)) base.push({ name: "compare_repairs", title: "Compare repairs", description: "Create two budget-aware repairs for the active conflict.", execute: async () => { await invoke("repairs"); return toolResult("Compared two feasible repairs.", state.snapshot.options, registration); } });
+  if (["options", "reviewed", "authorized"].includes(state.snapshot.state)) base.push({ name: "select_repair", title: "Select a repair", description: "Select one exact repair. Use shift for the arrival-safe schedule or remote for remote access.", inputSchema: { type: "object", properties: { repair_id: { type: "string", enum: ["shift", "remote"] } }, required: ["repair_id"], additionalProperties: false }, execute: async ({ repair_id }) => { await invoke("selection", { repair_id }); return toolResult("Selected a repair.", {}, registration); } });
+  if (state.snapshot.state === "reviewed") base.push({ name: "prepare_authorization", title: "Prepare human review", description: "Focus the exact-plan review. This tool cannot authorize it.", execute: async () => { read("Validated the current capability epoch."); $("review").scrollIntoView({ behavior: "smooth" }); return toolResult("Human review is ready. Authorization still requires the page control.", {}, registration); } });
+  if (state.snapshot.state === "authorized") base.push({ name: "execute_authorized_plan", title: "Create the authorized reservation", description: "Execute the exact human-authorized plan and return its receipt.", inputSchema: { type: "object", properties: { idempotency_key: { type: "string", minLength: 8 } }, required: ["idempotency_key"], additionalProperties: false }, execute: async ({ idempotency_key }) => { await invoke("execute", { idempotency_key }); return toolResult("Created the reservation receipt.", state.snapshot.receipt, registration); } });
   const expected = [...base.map((tool) => tool.name), "report_observed_capabilities"];
+  registration.fingerprint = fingerprint(`${registration.revision}|${registration.planHash}|${registration.state}|${expected.join(",")}`);
+  registration.label = `R${registration.revision} · ${registration.fingerprint}`;
   base.push({
     name: "report_observed_capabilities",
     title: "Report observed page capabilities",
@@ -211,20 +229,22 @@ function allowedTools() {
       properties: {
         tool_names: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 20 },
         observed_revision: { type: "integer", minimum: 1 },
+        observed_epoch: { type: "string" },
       },
       required: ["tool_names", "observed_revision"],
       additionalProperties: false,
     },
-    execute: async ({ tool_names, observed_revision }) => {
+    execute: async ({ tool_names, observed_revision, observed_epoch }) => {
       const observed = [...new Set(tool_names)];
       const matched = expected.filter((name) => observed.includes(name));
       const missing = expected.filter((name) => !observed.includes(name));
       const unexpected = observed.filter((name) => !expected.includes(name));
-      await recordProtocol("agent_observation", "reported_tool_set", null, { expected: expected.length, observed: observed.length, matched: matched.length, missing, unexpected, observed_revision });
-      return toolResult("Compared agent-observed capabilities with the page registration set.", { expected, observed, missing, unexpected });
+      const epochMatches = observed_revision === registration.revision && (!observed_epoch || observed_epoch === registration.label);
+      await recordProtocol("agent_observation", "reported_tool_set", null, { expected: expected.length, observed: observed.length, matched: matched.length, missing, unexpected, observed_revision, observed_epoch: observed_epoch || null, expected_epoch: registration.label, epoch_matches: epochMatches });
+      return toolResult("Compared agent-observed capabilities with the page registration set.", { expected, observed, missing, unexpected, epoch_matches: epochMatches }, registration);
     },
   });
-  return base;
+  return { tools: base, registration };
 }
 
 async function registerTools() {
@@ -239,21 +259,22 @@ async function registerTools() {
   }
   if (state.controller) {
     state.controller.abort();
-    if (state.currentToolNames.length) void recordProtocol("tool_set_removed", "state_transition", null, { tool_names: state.currentToolNames });
+    if (state.currentToolNames.length) void recordProtocol("tool_set_removed", "state_transition", null, { tool_names: state.currentToolNames, capability_epoch: state.capabilityEpoch?.label, removal_acknowledgement: "abort_signal_sent" });
   }
   state.controller = new AbortController();
   try {
-    const tools = allowedTools();
+    const { tools, registration } = allowedTools();
+    state.capabilityEpoch = registration;
     const started = performance.now();
     let registered = 0;
     for (const tool of tools) {
       const toolStarted = performance.now();
       await document.modelContext.registerTool({ inputSchema: { type: "object", properties: {}, additionalProperties: false }, ...tool }, { signal: state.controller.signal });
       registered += 1;
-      void recordProtocol("registration_success", tool.name, performance.now() - toolStarted, { page_accepted: true });
+      void recordProtocol("registration_success", tool.name, performance.now() - toolStarted, { page_accepted: true, capability_epoch: registration.label, registered_revision: registration.revision });
     }
     state.currentToolNames = tools.map((tool) => tool.name);
-    void recordProtocol("tool_set_registered", `revision_${state.snapshot.revision}`, performance.now() - started, { expected: tools.length, registered, tool_names: state.currentToolNames });
+    void recordProtocol("tool_set_registered", `revision_${registration.revision}`, performance.now() - started, { expected: tools.length, registered, tool_names: state.currentToolNames, capability_epoch: registration.label, registered_revision: registration.revision, discovery_acknowledgement: "not_exposed_by_current_api" });
     $("connection").textContent = "WebMCP connected";
     $("mode-copy").textContent = `Live capabilities: ${tools.map((tool) => tool.name).join(", ")}`;
   } catch (error) {
@@ -280,9 +301,9 @@ async function runProtocolChecks() {
       } catch (error) {
         response = error.message;
       }
-      await recordProtocol("stale_probe", "outdated_revision", null, { tested: true, accepted, response });
+      await recordProtocol("stale_capability_probe", "obsolete_registered_callback", null, { tested: true, accepted, response, registered_revision: state.snapshot.revision - 1, current_revision: state.snapshot.revision });
     } else {
-      await recordProtocol("stale_probe", "outdated_revision", null, { tested: false, accepted: false, reason: "revision_one" });
+      await recordProtocol("stale_capability_probe", "obsolete_registered_callback", null, { tested: false, accepted: false, reason: "revision_one", current_revision: state.snapshot.revision });
     }
 
     if (state.snapshot.state !== "authorized") {

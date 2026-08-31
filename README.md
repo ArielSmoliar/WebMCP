@@ -10,9 +10,14 @@ reporting tool, dynamic registration, exact-plan human authorization, stale-stat
 invalidation, durable persistence, and idempotent receipt recovery. The page
 remains fully usable when WebMCP is unavailable.
 
+Every dynamic tool set is issued as a capability epoch bound to one workflow
+revision and a deterministic fingerprint. A callback retained after the page
+requests removal still carries its issuing revision, so the server rejects it
+instead of silently applying it to newer state.
+
 Its Protocol Lab records page-side registration acceptance, tool-set removal,
 invocation latency, stale-state rejection, authorization probes, idempotent replay,
-and receipt recovery. Agent discovery is labeled separately because current WebMCP
+receipt recovery, and obsolete-callback containment. Agent discovery is labeled separately because current WebMCP
 does not acknowledge to the page which tools the agent can see. ChatGPT can call
 `report_observed_capabilities` to supply that missing observation explicitly.
 

@@ -79,6 +79,9 @@ returns the existing receipt on replay.
   execute, reload, and recover the same receipt.
 - Dynamic state-aware WebMCP registration using `document.modelContext.registerTool()`
   and abort-based unregistration.
+- Revision-bound capability epochs with deterministic tool-set fingerprints. An
+  obsolete callback cannot acquire authority over newer page state, even before
+  host-side removal propagation is observable.
 - Manual fallback when WebMCP is unavailable.
 - Exact-plan authorization and authorization invalidation after mutation.
 - Docker, Render, provenance, and protocol-observation documentation.
@@ -107,6 +110,9 @@ returns the existing receipt on replay.
   Manual-mode verification browser.
 - The first revision 4 production check exposed mixed cached assets. Static asset
   versioning was added and verified in revision 5.
+- Capability-epoch implementation passes all seven tests and JavaScript syntax
+  verification locally. Production deployment and a fresh protocol run remain to
+  be recorded.
 - Browser QA found and fixed:
   - duplicate repair actions;
   - stale budget, arrival, and agenda values after plan mutation;

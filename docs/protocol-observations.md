@@ -17,8 +17,10 @@ revision. The evidence rail reports:
 
 - registration acceptance and duration for each page tool;
 - aggregate tool-set registration and abort-based removal at each revision;
+- a deterministic capability epoch for the exact revision, plan hash, workflow
+  state, and registered tool names;
 - mutation-to-visible-render latency;
-- intentionally stale revision rejection;
+- rejection of a simulated callback retained from an obsolete capability epoch;
 - execution attempts without authorization;
 - idempotent replay against the original receipt key;
 - receipt recovery after a page reload;
@@ -28,6 +30,23 @@ revision. The evidence rail reports:
 The page does not label a successful `registerTool()` call as agent discovery.
 Registration is page-measured. Discovery remains agent-reported because the
 current API provides no discovery acknowledgement back to the page.
+
+## Capability epochs
+
+Dynamic registration creates a subtle race: aborting an old tool set asks the host
+to remove it, but the page cannot observe when that removal becomes effective. A
+naive callback can also read the newest page state when invoked, accidentally
+giving an obsolete capability authority over a newer revision.
+
+Captain's Table binds every callback to the revision that issued it. Mutation
+callbacks submit that captured revision to the authoritative server; read-only UI
+callbacks compare it before revealing or focusing state. Each registration set is
+labeled `R{revision} · {fingerprint}`. The fingerprint is a deterministic diagnostic
+identifier, not a cryptographic security claim.
+
+The safety probe simulates invocation from the preceding epoch and records whether
+the server accepted it. This tests the failure mode that abort-only lifecycle
+management cannot itself prove safe.
 
 Protocol events are diagnostic evidence, not cryptographic attestation of agent
 identity. Timestamps are server-recorded, durations are page-measured, and the
@@ -63,6 +82,13 @@ A page can measure that registration resolved, but not when an agent observes th
 new capability or stops observing a removed one. A future lifecycle event or
 registration-state API would let applications measure propagation latency and
 capability-set accuracy without asking the agent to report its own view.
+
+### Removal acknowledgement and invocation provenance
+
+The page can send an abort signal but cannot confirm that a host has stopped
+offering the old tool set. A future API should expose propagation acknowledgement
+and attach an unforgeable registration identifier to each invocation. The current
+demo compensates with revision-bound callbacks and reports the gap explicitly.
 
 ### Background lifecycle
 
