@@ -128,7 +128,9 @@ See [the engineering plan](docs/engineering-plan.md),
 [interaction design](docs/interaction-design.md),
 [Google Cloud deployment guide](docs/deploy-google-cloud.md),
 [protocol observations](docs/protocol-observations.md), and the
-[maintainer feedback log](docs/protocol-maintainer-feedback.md).
+[maintainer feedback log](docs/protocol-maintainer-feedback.md). The
+[host-verification runbook](docs/webmcp-host-verification-runbook.md) defines the
+gated procedure for completing the remaining end-to-end proof.
 
 ## Technology
 

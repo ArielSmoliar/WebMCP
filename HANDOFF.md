@@ -249,5 +249,6 @@ cd "/Users/arielsmoliar/Documents/ChatGPT/WebMCP"
 - `docs/test-plan.md`
 - `docs/protocol-observations.md`
 - `docs/protocol-maintainer-feedback.md`
+- `docs/webmcp-host-verification-runbook.md`
 - `.impeccable/critique/2026-08-31T17-23-19Z__docs-interaction-design-md.md`
 - `CHALLENGE_WORK.md`
