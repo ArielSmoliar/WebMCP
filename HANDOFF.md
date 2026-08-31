@@ -14,7 +14,7 @@ It is separate from Offsite Captain, Resurface, Flare AI, Stagehand, and loco-ag
 - Public repository: `https://github.com/ArielSmoliar/WebMCP`
 - Deployment: `https://captains-table-webmcp-pgg2be7x2a-ue.a.run.app`
 - Cloud Run service: `captains-table-webmcp`, revision
-  `captains-table-webmcp-00003-4z5`, project `offsite-captain-2026`, region
+  `captains-table-webmcp-00005-b97`, project `offsite-captain-2026`, region
   `us-east1`
 - Firestore: deletion-protected named database `captains-table`; runtime IAM is
   conditionally restricted to that database
@@ -94,12 +94,19 @@ returns the existing receipt on replay.
 - Production Cloud Run journey reached receipt `CT-F10E26`, revision 6, and
   restored it unchanged after a fresh reload from Firestore.
 - Public `/health` returned `{"status":"ok"}` and `/readyz` returned
-  `{"status":"ready"}` on Cloud Run revision 3.
+  `{"status":"ready"}` on Cloud Run revision 5.
 - Post-deployment Impeccable audit scored 17/20. The resulting polish pass added
   shared pending/error recovery, complete control states, and the documented
   wide-screen protocol evidence rail. The polished local journey completed with
   receipt `CT-FAB03F`; production revision 3 serves the new error surface and
   polish stylesheet.
+- Production Protocol Lab run completed at revision 6 with receipt `CT-2A9204`:
+  0 stale mutations accepted, 0 authorization bypasses, 0 duplicate executions,
+  121 ms median mutation-to-visible-update latency, and verified receipt recovery
+  after reload. WebMCP discovery remains correctly labeled `Not reported` in the
+  Manual-mode verification browser.
+- The first revision 4 production check exposed mixed cached assets. Static asset
+  versioning was added and verified in revision 5.
 - Browser QA found and fixed:
   - duplicate repair actions;
   - stale budget, arrival, and agenda values after plan mutation;
@@ -117,10 +124,9 @@ Docker image.
 - Actual discovery and invocation by ChatGPT in a WebMCP-enabled browser. The in-app
   browser used for QA did not expose `document.modelContext`, so it exercised Manual mode.
 - Dynamic tool removal/appearance in the real judging environment.
-- Cross-revision Firestore recovery after deploying another Cloud Run revision.
+- Real WebMCP discovery acknowledgement and dynamic removal in the target browser.
 - Docker build. The local Docker client was installed, but its daemon socket did not respond.
 - The full browser error matrix, concurrent browser tabs, and authorization expiry UI.
-- A post-implementation Impeccable critique/audit.
 
 ## Remaining Work, In Priority Order
 
