@@ -8,11 +8,11 @@ The dedicated local Git repository is `/Users/arielsmoliar/Documents/ChatGPT/Web
 It is separate from Offsite Captain, Resurface, Flare AI, Stagehand, and loco-agent.
 
 - Branch: `main`
-- Current checkpoint before this observation: `7c7419f docs: refresh WebMCP session handoff`
-- Working tree before this handoff refresh: clean
+- Current checkpoint: `a7eabab feat: enable Chrome WebMCP origin trial`
+- Working tree before this final handoff update: clean
 - Git remote: `https://github.com/ArielSmoliar/WebMCP.git`
 - Public repository: `https://github.com/ArielSmoliar/WebMCP`
-- Deployment: `https://captains-table-webmcp-pgg2be7x2a-ue.a.run.app`
+- Deployment: `https://captains-table-webmcp-1017459622661.us-east1.run.app`
 - Cloud Run service: `captains-table-webmcp`, revision
   `captains-table-webmcp-00007-hft`, project `offsite-captain-2026`, region
   `us-east1`
@@ -157,8 +157,10 @@ Docker image.
 
 ## Not Yet Verified
 
-- Actual discovery and invocation by ChatGPT in a WebMCP-enabled browser. The in-app
-  browser used for QA did not expose `document.modelContext`, so it exercised Manual mode.
+- Actual host discovery and invocation by ChatGPT. Chrome 151 now exposes
+  `document.modelContext` through the Origin Trial and the page accepts its
+  registrations, but the connected ChatGPT extension session did not advertise
+  the host `webmcp` capability.
 - Dynamic tool removal/appearance in the real judging environment.
 - Real WebMCP discovery acknowledgement and dynamic removal in the target browser.
 - Docker build. The local Docker client was installed, but its daemon socket did not respond.
@@ -166,16 +168,20 @@ Docker image.
 
 ## Remaining Work, In Priority Order
 
-1. Open the deployed URL in a WebMCP-enabled ChatGPT browser and verify all six workflow tools plus the diagnostic reporting tool,
-   schemas, dynamic lifecycle, visible mutations, authorization boundary, and receipt.
-2. Have the agent call `report_observed_capabilities` with the current revision and
+1. Fully restart ChatGPT, reconnect Chrome, and reopen the cache-busted production
+   URL `/?build=origin-trial-1`. Confirm that the tab advertises the native host
+   `webmcp` capability before making any discovery claim.
+2. If the host capability appears, verify all six workflow tools plus the
+   diagnostic reporting tool, schemas, dynamic lifecycle, visible mutations,
+   authorization boundary, and receipt.
+3. Have the agent call `report_observed_capabilities` with the current revision and
    capability epoch, then capture one state-changing WebMCP invocation. This is the
    remaining proof needed to move the demonstrated score from 9.0 to 9.5.
-3. Fix any compatibility differences found in the real browser. Use stable compatibility
+4. Fix any compatibility differences found in the real browser. Use stable compatibility
    mode only if dynamic propagation is unreliable, and label it honestly.
-4. Add browser automation coverage for the complete journey and failure matrix.
-5. Run post-capability-epoch Impeccable critique and browser audit.
-6. Prepare Devpost text, screenshots, video script, provenance statement, and submission.
+5. Add browser automation coverage for the complete journey and failure matrix.
+6. Run post-capability-epoch Impeccable critique and browser audit.
+7. Prepare Devpost text, screenshots, video script, provenance statement, and submission.
 
 ## Important Boundaries
 
@@ -197,7 +203,8 @@ Continue the WebMCP hackathon demo in the dedicated repository at
 acting, then inspect git status and the latest commits. The public repository is
 https://github.com/ArielSmoliar/WebMCP and the live Cloud Run demo is
 https://captains-table-webmcp-1017459622661.us-east1.run.app. Production revision
-captains-table-webmcp-00006-m2n serves the capability-epoch build.
+captains-table-webmcp-00007-hft serves the capability-epoch build plus the Chrome
+WebMCP Origin Trial token, which expires November 16, 2026.
 
 The immediate goal is to turn the implemented WebMCP relevance score into a
 demonstrated 9.5/10. Use a real WebMCP-enabled ChatGPT browser to verify dynamic
@@ -209,6 +216,12 @@ acknowledgement from registerTool resolution alone. Record exact evidence in
 HANDOFF.md and docs/protocol-observations.md, fix compatibility issues if found,
 run node --check static/app.js and the seven-test Python suite, then deploy and
 push only if code changes are required.
+
+Chrome 151 already proves page-level enablement: the cache-busted production URL
+reported WebMCP connected, accepted 3/3 R1 registrations, and emitted epoch
+R1 · 94CBFBDC. The prior ChatGPT extension session still exposed only pageAssets,
+so restart ChatGPT and first verify that the tab advertises the native webmcp
+capability. Do not confuse page registration with host discovery.
 
 Preserve the settled architecture: OpenAI ChatGPT is the external agent, no
 embedded Agents SDK, no Gemini/ADK runtime, no standalone MCP server, human-only
