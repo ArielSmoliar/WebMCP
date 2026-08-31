@@ -1,5 +1,8 @@
 # WebMCP Protocol Observations
 
+Maintainer-facing capability requests and their evidence status are tracked in
+[`protocol-maintainer-feedback.md`](protocol-maintainer-feedback.md).
+
 Captain's Table uses the imperative API because the workflow needs structured
 results, conditional capabilities, and multiple state transitions on one page.
 
@@ -97,3 +100,48 @@ service workers, and resumable execution.
 
 These are observations from the implemented workflow, not requirements invented
 outside the demo.
+
+## 2026-08-31 target-browser observation
+
+At `2026-08-31T21:02:59Z`, Codex selected its in-app ChatGPT browser for the
+production URL and loaded Cloud Run revision 6. The restored production session
+showed revision `R6`, plan hash fingerprint `04C2F029`, receipt `CT-2A9204`, and
+the earlier persisted safety measurements: 0 stale mutations accepted, 0
+authorization bypasses, 0 duplicate executions, 121 ms median visible-update
+latency, and verified receipt recovery.
+
+This browser did not expose `document.modelContext`; the interface correctly
+entered Manual mode and displayed "This browser does not expose page tools."
+The connected-browser inventory contained only the Codex in-app browser, and no
+Captain's Table page tools appeared in the host tool catalog after navigation.
+Consequently this run does **not** establish host discovery, invocation,
+tool-set replacement, or removal acknowledgement. It also could not call
+`report_observed_capabilities` or perform a new state-changing WebMCP invocation.
+Those claims remain pending a ChatGPT browser build that enables WebMCP for this
+session.
+
+A follow-up at `2026-08-31T21:06:03Z` narrowed the limitation. The installed
+ChatGPT app is version `26.818.61809` (build `7019`) and its bundled browser
+plugin documents the native `webmcp` capability with `fetchTools()` and tool
+invocation support. The live production tab nevertheless advertised only the
+`pageAssets` capability, and a direct capability lookup returned `Capability is
+not available: webmcp`. This indicates that support is present in the installed
+client bundle but is not enabled or exposed by the connected in-app-browser
+backend for this session. Official OpenAI documentation currently provides no
+public enablement switch or supported-build matrix for this capability.
+
+At `2026-08-31T21:20:49Z`, the production origin was enrolled in Chrome's
+WebMCP Origin Trial and Cloud Run revision
+`captains-table-webmcp-00007-hft` deployed the resulting token. A cache-busted
+Chrome 151 load then changed the page from Manual mode to "WebMCP connected."
+The page measured 3/3 registrations accepted for `inspect_decision`,
+`diagnose_plan`, and `report_observed_capabilities`, with capability epoch
+`R1 · 94CBFBDC`.
+
+The connected ChatGPT Chrome extension still advertised only the `pageAssets`
+tab capability. Direct lookup of the host's native `webmcp` capability returned
+`Capability is not available: webmcp`, including after waiting for propagation.
+This proves page API enablement and page-side registration, but still does not
+prove host discovery or invocation. It also demonstrates that browser API
+availability, page registration acceptance, and agent-host WebMCP integration
+are three distinct readiness layers that need separate diagnostics.

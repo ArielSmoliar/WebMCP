@@ -11,6 +11,9 @@ Firestore Native mode. Local development continues to use SQLite by default.
 - Firestore collection: `captains_table_sessions`
 - Runtime service account: `captains-table-webmcp`
 - Public HTTPS ingress; unauthenticated access is required for judges and WebMCP
+- Chrome WebMCP Origin Trial registration for the production origin expires
+  November 16, 2026; renew or remove the token in `static/index.html` before
+  that date
 
 The runtime service account receives `roles/datastore.user` through an IAM
 condition that matches only the `captains-table` database. Cloud Run supplies
