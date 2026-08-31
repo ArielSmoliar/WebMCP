@@ -8,7 +8,7 @@ The dedicated local Git repository is `/Users/arielsmoliar/Documents/ChatGPT/Web
 It is separate from Offsite Captain, Resurface, Flare AI, Stagehand, and loco-agent.
 
 - Branch: `main`
-- Current commit: `a247d9e feat: build WebMCP shared decision demo`
+- Implementation checkpoint: `a247d9e feat: build WebMCP shared decision demo`
 - Working tree at handoff creation: clean before adding these handoff artifacts
 - Git remote: none
 - Deployment: not created
@@ -142,4 +142,3 @@ cd "/Users/arielsmoliar/Documents/ChatGPT/WebMCP"
 - `docs/protocol-observations.md`
 - `.impeccable/critique/2026-08-31T17-23-19Z__docs-interaction-design-md.md`
 - `CHALLENGE_WORK.md`
-
