@@ -6,7 +6,7 @@ diagnose, compare, select, and execute structured actions. Only the human can
 authorize the exact plan.
 
 The product demonstrates six state-aware imperative WebMCP tools, dynamic tool
-registration, exact-plan human authorization, stale-state invalidation, SQLite
+registration, exact-plan human authorization, stale-state invalidation, durable
 persistence, and idempotent receipt recovery. The page remains fully usable when
 WebMCP is unavailable.
 
@@ -33,13 +33,15 @@ ChatGPT to create the reservation.
 ```
 
 See [the engineering plan](docs/engineering-plan.md), [interaction design](docs/interaction-design.md),
-and [protocol observations](docs/protocol-observations.md).
+[Google Cloud deployment guide](docs/deploy-google-cloud.md), and
+[protocol observations](docs/protocol-observations.md).
 
 ## Technology
 
 - OpenAI ChatGPT as the external browser agent
 - WebMCP imperative API through `document.modelContext`
-- FastAPI, Pydantic, SQLite, and plain semantic HTML/CSS/JavaScript
+- FastAPI, Pydantic, Firestore in production, SQLite locally, and plain semantic HTML/CSS/JavaScript
+- Google Cloud Run with a least-privilege service identity
 
 No embedded agent or second model is used. The OpenAI Agents SDK is deliberately
 absent because ChatGPT already owns agent planning and WebMCP invocation.

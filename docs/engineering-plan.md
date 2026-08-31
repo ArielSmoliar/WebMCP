@@ -1,5 +1,10 @@
 # Engineering Plan: Captain's Table WebMCP Demo
 
+> Deployment amendment (2026-08-31): production persistence now targets
+> Firestore transactions on Google Cloud Run. SQLite remains the local adapter.
+> The original Render/SQLite deployment discussion below is retained as design
+> history; `docs/deploy-google-cloud.md` is the authoritative deployment guide.
+
 ## Outcome
 
 Ship a dedicated, public, OpenAI-first WebMCP application in which a judge uses

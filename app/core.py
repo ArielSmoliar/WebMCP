@@ -45,6 +45,11 @@ class Store:
         db.row_factory = sqlite3.Row
         return db
 
+    def ready(self) -> bool:
+        with self.connect() as db:
+            db.execute("SELECT 1").fetchone()
+        return True
+
     def create(self) -> dict[str, Any]:
         session_id = secrets.token_urlsafe(18)
         payload = {
@@ -207,3 +212,147 @@ class Store:
             payload["events"].insert(0, {"source": source, "action": "execute_authorized_plan", "revision": payload["revision"] + 1, "summary": "Created the reservation receipt."})
             return True
         return self.mutate(session_id, expected_revision, operation)
+
+
+class FirestoreStore(Store):
+    """Production store using Firestore transactions for revision-safe mutations."""
+
+    def __init__(self, project: str | None = None, database: str | None = None) -> None:
+        from google.cloud import firestore
+
+        self._firestore = firestore
+        self.client = firestore.Client(
+            project=project or os.getenv("GOOGLE_CLOUD_PROJECT"),
+            database=database or os.getenv("CAPTAINS_TABLE_FIRESTORE_DATABASE", "(default)"),
+        )
+        self.collection = self.client.collection(
+            os.getenv("CAPTAINS_TABLE_FIRESTORE_COLLECTION", "captains_table_sessions")
+        )
+
+    def ready(self) -> bool:
+        list(self.collection.limit(1).stream())
+        return True
+
+    def create(self) -> dict[str, Any]:
+        session_id = secrets.token_urlsafe(18)
+        payload = {
+            "session_id": session_id,
+            "revision": 1,
+            "state": "draft",
+            "plan": SCENARIO,
+            "plan_hash": canonical_hash(SCENARIO),
+            "finding": None,
+            "events": [],
+        }
+        self.collection.document(session_id).create({
+            "payload": payload,
+            "revision": 1,
+            "state": "draft",
+            "updated_at": datetime.now(UTC),
+        })
+        return payload
+
+    def get(self, session_id: str) -> dict[str, Any] | None:
+        snapshot = self.collection.document(session_id).get()
+        if not snapshot.exists:
+            return None
+        return snapshot.to_dict()["payload"]
+
+    def _transactional_mutation(self, session_id: str, expected_revision: int, operation) -> dict[str, Any]:
+        document = self.collection.document(session_id)
+        transaction = self.client.transaction()
+
+        @self._firestore.transactional
+        def apply(transaction):
+            snapshot = document.get(transaction=transaction)
+            if not snapshot.exists:
+                raise KeyError("not_found")
+            payload = snapshot.to_dict()["payload"]
+            if payload["revision"] != expected_revision:
+                raise ValueError("stale_state")
+            changed = operation(payload)
+            if changed:
+                payload["revision"] += 1
+                payload["plan_hash"] = canonical_hash(payload["plan"])
+                transaction.set(document, {
+                    "payload": payload,
+                    "revision": payload["revision"],
+                    "state": payload["state"],
+                    "updated_at": datetime.now(UTC),
+                })
+            return payload
+
+        return apply(transaction)
+
+    def diagnose(self, session_id: str, expected_revision: int, source: str) -> dict[str, Any]:
+        def operation(payload: dict[str, Any]) -> bool:
+            if payload["finding"]:
+                return False
+            payload["state"] = "conflict"
+            payload["finding"] = {
+                "title": "The roadmap session starts before everyone arrives",
+                "detail": "Two required attendees arrive at 11:40, more than two hours after the 09:30 start.",
+            }
+            payload["events"].insert(0, {
+                "source": source,
+                "action": "diagnose_plan",
+                "revision": payload["revision"] + 1,
+                "summary": "Found the late-arrival conflict.",
+            })
+            return True
+
+        return self._transactional_mutation(session_id, expected_revision, operation)
+
+    def mutate(self, session_id: str, expected_revision: int, operation) -> dict[str, Any]:
+        return self._transactional_mutation(session_id, expected_revision, operation)
+
+    def execute(self, session_id: str, expected_revision: int, idempotency_key: str, source: str) -> dict[str, Any]:
+        document = self.collection.document(session_id)
+        transaction = self.client.transaction()
+
+        @self._firestore.transactional
+        def apply(transaction):
+            snapshot = document.get(transaction=transaction)
+            if not snapshot.exists:
+                raise KeyError("not_found")
+            payload = snapshot.to_dict()["payload"]
+            if payload.get("receipt", {}).get("idempotency_key") == idempotency_key:
+                return payload
+            if payload["revision"] != expected_revision:
+                raise ValueError("stale_state")
+            if payload["state"] != "authorized" or not payload.get("authorization"):
+                raise ValueError("authorization_required")
+            if datetime.fromisoformat(payload["authorization"]["expires_at"]) < datetime.now(UTC):
+                raise ValueError("authorization_expired")
+            payload["state"] = "completed"
+            payload["revision"] += 1
+            payload["receipt"] = {
+                "confirmation": f"CT-{secrets.token_hex(3).upper()}",
+                "idempotency_key": idempotency_key,
+                "plan_hash": payload["plan_hash"],
+                "status": "reserved",
+            }
+            payload["events"].insert(0, {
+                "source": source,
+                "action": "execute_authorized_plan",
+                "revision": payload["revision"],
+                "summary": "Created the reservation receipt.",
+            })
+            transaction.set(document, {
+                "payload": payload,
+                "revision": payload["revision"],
+                "state": payload["state"],
+                "updated_at": datetime.now(UTC),
+            })
+            return payload
+
+        return apply(transaction)
+
+
+def build_store():
+    backend = os.getenv("CAPTAINS_TABLE_STORAGE", "sqlite").lower()
+    if backend == "firestore":
+        return FirestoreStore()
+    if backend != "sqlite":
+        raise ValueError(f"unsupported storage backend: {backend}")
+    return Store()

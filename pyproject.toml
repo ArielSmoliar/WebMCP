@@ -10,6 +10,7 @@ dependencies = [
   "fastapi==0.141.1",
   "pydantic==2.13.5",
   "uvicorn[standard]==0.52.4",
+  "google-cloud-firestore==2.21.0",
 ]
 
 [tool.pytest.ini_options]

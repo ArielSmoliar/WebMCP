@@ -10,8 +10,9 @@ It is separate from Offsite Captain, Resurface, Flare AI, Stagehand, and loco-ag
 - Branch: `main`
 - Implementation checkpoint: `a247d9e feat: build WebMCP shared decision demo`
 - Working tree at handoff creation: clean before adding these handoff artifacts
-- Git remote: none
-- Deployment: not created
+- Git remote: `https://github.com/ArielSmoliar/WebMCP.git`
+- Public repository: `https://github.com/ArielSmoliar/WebMCP`
+- Deployment target: Google Cloud Run with Firestore; not yet created
 - Product name in the code and interface: `Captain's Table`
 - Repository name: `WebMCP`
 
@@ -41,15 +42,17 @@ Only the direct page UI can authorize the exact plan. There is deliberately no
 ## Architecture
 
 - FastAPI and Pydantic API in `app/main.py`
-- Deterministic workflow and SQLite persistence in `app/core.py`
+- Deterministic workflow with SQLite and Firestore adapters in `app/core.py`
 - Semantic product interface in `static/index.html`
 - Shared human/WebMCP action controller in `static/app.js`
 - Base tokens and layout in `static/styles.css` and `static/workflow.css`
-- Docker and Render configuration in `Dockerfile` and `render.yaml`
+- Docker and Cloud Run deployment configuration in `Dockerfile` and
+  `docs/deploy-google-cloud.md`
 
 The server is authoritative. Every mutation carries an expected revision. SQLite
-uses `BEGIN IMMEDIATE`. Authorization binds the exact plan hash. Execution uses an
-idempotency key and returns the existing receipt on replay.
+uses `BEGIN IMMEDIATE` locally and Firestore uses transactions in production.
+Authorization binds the exact plan hash. Execution uses an idempotency key and
+returns the existing receipt on replay.
 
 ## Completed Work
 
@@ -102,7 +105,7 @@ Docker image.
 2. Decide whether the GitHub repository should be public or private.
 3. Create the GitHub repository, add the remote, and push `main` only after the user
    authorizes the visibility choice.
-4. Deploy the Render service with its persistent disk.
+4. Deploy the Cloud Run service with Firestore Native mode.
 5. Open the deployed URL in a WebMCP-enabled ChatGPT browser and verify all six tools,
    schemas, dynamic lifecycle, visible mutations, authorization boundary, and receipt.
 6. Fix any compatibility differences found in the real browser. Use stable compatibility

@@ -6,11 +6,11 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.core import Store
+from app.core import build_store
 
 
 ROOT = Path(__file__).resolve().parent.parent
-store = Store()
+store = build_store()
 app = FastAPI(title="Captain's Table", version="0.1.0")
 app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
 
@@ -61,9 +61,8 @@ def health() -> dict[str, str]:
 @app.get("/readyz")
 def ready() -> dict[str, str]:
     try:
-        with store.connect() as db:
-            db.execute("SELECT 1").fetchone()
-    except OSError as exc:
+        store.ready()
+    except Exception as exc:
         raise HTTPException(503, detail="storage_error") from exc
     return {"status": "ready"}
 

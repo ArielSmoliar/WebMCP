@@ -1,4 +1,64 @@
-from app.core import Store
+from app.core import FirestoreStore, Store
+
+
+class FakeSnapshot:
+    def __init__(self, data):
+        self._data = data
+        self.exists = data is not None
+
+    def to_dict(self):
+        return self._data
+
+
+class FakeDocument:
+    def __init__(self, records, key):
+        self.records = records
+        self.key = key
+
+    def create(self, data):
+        assert self.key not in self.records
+        self.records[self.key] = data
+
+    def get(self, transaction=None):
+        return FakeSnapshot(self.records.get(self.key))
+
+
+class FakeCollection:
+    def __init__(self, records):
+        self.records = records
+
+    def document(self, key):
+        return FakeDocument(self.records, key)
+
+    def limit(self, count):
+        return self
+
+    def stream(self):
+        return []
+
+
+class FakeTransaction:
+    def set(self, document, data):
+        document.records[document.key] = data
+
+
+class FakeClient:
+    def transaction(self):
+        return FakeTransaction()
+
+
+class FakeFirestore:
+    @staticmethod
+    def transactional(function):
+        return function
+
+
+def firestore_store():
+    store = FirestoreStore.__new__(FirestoreStore)
+    store._firestore = FakeFirestore
+    store.client = FakeClient()
+    store.collection = FakeCollection({})
+    return store
 
 
 def test_session_persists_and_diagnosis_is_idempotent(tmp_path):
@@ -48,4 +108,19 @@ def test_complete_authorized_journey_and_replay(tmp_path):
     state = store.execute(state["session_id"], 6, "judge-run-001", "webmcp")
     assert state["state"] == "completed"
     replay = store.execute(state["session_id"], 1, "judge-run-001", "webmcp")
+    assert replay["receipt"] == state["receipt"]
+
+
+def test_firestore_full_journey_and_replay():
+    store = firestore_store()
+    state = store.create()
+    state = store.diagnose(state["session_id"], 1, "webmcp")
+    state = store.compare(state["session_id"], 2, "webmcp")
+    state = store.select(state["session_id"], 3, "shift", "webmcp")
+    state = store.authorize(state["session_id"], 4, state["plan_hash"], True)
+    state = store.execute(state["session_id"], 5, "firestore-run-001", "webmcp")
+
+    assert store.ready()
+    assert state["state"] == "completed"
+    replay = store.execute(state["session_id"], 1, "firestore-run-001", "webmcp")
     assert replay["receipt"] == state["receipt"]
