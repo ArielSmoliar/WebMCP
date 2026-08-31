@@ -1,5 +1,7 @@
 # Captain's Table
 
+![Captain's Table WebMCP hero: a human-authorized planning instrument with revision-bound agent signals](docs/assets/captains-table-webmcp-hero-v2.png)
+
 Captain's Table is a WebMCP reference application where a human and ChatGPT's
 browser agent operate one live decision surface together. The agent can inspect,
 diagnose, compare, select, and execute structured actions. Only the human can
