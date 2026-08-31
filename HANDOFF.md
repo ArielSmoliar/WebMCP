@@ -111,8 +111,10 @@ returns the existing receipt on replay.
 - The first revision 4 production check exposed mixed cached assets. Static asset
   versioning was added and verified in revision 5.
 - Capability-epoch implementation passes all seven tests and JavaScript syntax
-  verification locally. Production deployment and a fresh protocol run remain to
-  be recorded.
+  verification locally. Cloud Run revision `captains-table-webmcp-00006-m2n`
+  serves 100% of traffic, `/health` returns `{"status":"ok"}`, and the production
+  HTML references the `capability-epochs-1` asset set. A real WebMCP-enabled agent
+  observation and invocation run remains to be recorded.
 - Browser QA found and fixed:
   - duplicate repair actions;
   - stale budget, arrival, and agenda values after plan mutation;
