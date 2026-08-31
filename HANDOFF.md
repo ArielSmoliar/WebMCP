@@ -8,13 +8,13 @@ The dedicated local Git repository is `/Users/arielsmoliar/Documents/ChatGPT/Web
 It is separate from Offsite Captain, Resurface, Flare AI, Stagehand, and loco-agent.
 
 - Branch: `main`
-- Implementation checkpoint: `a247d9e feat: build WebMCP shared decision demo`
-- Working tree at handoff creation: clean before adding these handoff artifacts
+- Current checkpoint: `e5609b3 docs: record capability epoch deployment`
+- Working tree before this handoff refresh: clean
 - Git remote: `https://github.com/ArielSmoliar/WebMCP.git`
 - Public repository: `https://github.com/ArielSmoliar/WebMCP`
 - Deployment: `https://captains-table-webmcp-pgg2be7x2a-ue.a.run.app`
 - Cloud Run service: `captains-table-webmcp`, revision
-  `captains-table-webmcp-00005-b97`, project `offsite-captain-2026`, region
+  `captains-table-webmcp-00006-m2n`, project `offsite-captain-2026`, region
   `us-east1`
 - Firestore: deletion-protected named database `captains-table`; runtime IAM is
   conditionally restricted to that database
@@ -138,19 +138,16 @@ Docker image.
 
 ## Remaining Work, In Priority Order
 
-1. Decide whether the product remains `Captain's Table` or receives a protocol-native
-   name. Do not conflate this with the dedicated repository name `WebMCP`.
-2. Decide whether the GitHub repository should be public or private.
-3. Create the GitHub repository, add the remote, and push `main` only after the user
-   authorizes the visibility choice.
-4. Completed: deploy the Cloud Run service with Firestore Native mode.
-5. Open the deployed URL in a WebMCP-enabled ChatGPT browser and verify all six workflow tools plus the diagnostic reporting tool,
+1. Open the deployed URL in a WebMCP-enabled ChatGPT browser and verify all six workflow tools plus the diagnostic reporting tool,
    schemas, dynamic lifecycle, visible mutations, authorization boundary, and receipt.
-6. Fix any compatibility differences found in the real browser. Use stable compatibility
+2. Have the agent call `report_observed_capabilities` with the current revision and
+   capability epoch, then capture one state-changing WebMCP invocation. This is the
+   remaining proof needed to move the demonstrated score from 9.0 to 9.5.
+3. Fix any compatibility differences found in the real browser. Use stable compatibility
    mode only if dynamic propagation is unreliable, and label it honestly.
-7. Add browser automation coverage for the complete journey and failure matrix.
-8. Run post-implementation Impeccable critique, audit, and polish.
-9. Prepare Devpost text, screenshots, video script, provenance statement, and submission.
+4. Add browser automation coverage for the complete journey and failure matrix.
+5. Run post-capability-epoch Impeccable critique and browser audit.
+6. Prepare Devpost text, screenshots, video script, provenance statement, and submission.
 
 ## Important Boundaries
 
@@ -161,7 +158,36 @@ Docker image.
 - Do not add a standalone MCP server. This demo is about page-scoped WebMCP.
 - Do not claim that same-origin JavaScript proves physical human presence.
 - Do not claim real WebMCP verification until it is exercised in the target browser.
-- Do not publish, deploy, or submit without the required user decision or confirmation.
+- Deployment and public repository are already approved and live. Do not submit to
+  Devpost without explicit user confirmation.
+
+## New Session Prompt
+
+```text
+Continue the WebMCP hackathon demo in the dedicated repository at
+/Users/arielsmoliar/Documents/ChatGPT/WebMCP. Read HANDOFF.md completely before
+acting, then inspect git status and the latest commits. The public repository is
+https://github.com/ArielSmoliar/WebMCP and the live Cloud Run demo is
+https://captains-table-webmcp-1017459622661.us-east1.run.app. Production revision
+captains-table-webmcp-00006-m2n serves the capability-epoch build.
+
+The immediate goal is to turn the implemented WebMCP relevance score into a
+demonstrated 9.5/10. Use a real WebMCP-enabled ChatGPT browser to verify dynamic
+tool discovery, report_observed_capabilities with the current capability epoch,
+one state-changing tool invocation, tool-set replacement after the revision
+changes, the page-only authorization boundary, execution, receipt recovery, and
+the stale-capability safety probe. Do not claim host discovery or removal
+acknowledgement from registerTool resolution alone. Record exact evidence in
+HANDOFF.md and docs/protocol-observations.md, fix compatibility issues if found,
+run node --check static/app.js and the seven-test Python suite, then deploy and
+push only if code changes are required.
+
+Preserve the settled architecture: OpenAI ChatGPT is the external agent, no
+embedded Agents SDK, no Gemini/ADK runtime, no standalone MCP server, human-only
+exact-plan authorization, Firestore production persistence, and revision-bound
+capability epochs. Use the Impeccable skill for any interface changes. Keep the
+tone precise, quietly ambitious, and trustworthy.
+```
 
 ## Useful Commands
 
