@@ -12,7 +12,15 @@ It is separate from Offsite Captain, Resurface, Flare AI, Stagehand, and loco-ag
 - Working tree at handoff creation: clean before adding these handoff artifacts
 - Git remote: `https://github.com/ArielSmoliar/WebMCP.git`
 - Public repository: `https://github.com/ArielSmoliar/WebMCP`
-- Deployment target: Google Cloud Run with Firestore; not yet created
+- Deployment: `https://captains-table-webmcp-pgg2be7x2a-ue.a.run.app`
+- Cloud Run service: `captains-table-webmcp`, revision
+  `captains-table-webmcp-00002-rmx`, project `offsite-captain-2026`, region
+  `us-east1`
+- Firestore: deletion-protected named database `captains-table`; runtime IAM is
+  conditionally restricted to that database
+- A dedicated project, `captains-table-webmcp-2026`, was created but could not be
+  linked to billing because the billing account reached its project quota. It is
+  unused and unbilled; do not delete it without explicit user approval.
 - Product name in the code and interface: `Captain's Table`
 - Repository name: `WebMCP`
 
@@ -70,12 +78,16 @@ returns the existing receipt on replay.
 
 ## Verification Evidence
 
-- Python 3.13: `6 passed` in `8.03s`.
+- Python 3.13: `7 passed` after the Firestore migration.
 - JavaScript syntax: `node --check static/app.js` passed.
 - Python compilation passed.
 - `git diff --check` passed.
 - In-app browser QA completed at 760px and 680px widths.
 - Browser journey reached receipt `CT-830C56`, revision 7, and persisted it after reload.
+- Production Cloud Run journey reached receipt `CT-F10E26`, revision 6, and
+  restored it unchanged after a fresh reload from Firestore.
+- Public `/health` returned `{"status":"ok"}` and `/readyz` returned
+  `{"status":"ready"}` on Cloud Run revision 2.
 - Browser QA found and fixed:
   - duplicate repair actions;
   - stale budget, arrival, and agenda values after plan mutation;
@@ -93,7 +105,7 @@ Docker image.
 - Actual discovery and invocation by ChatGPT in a WebMCP-enabled browser. The in-app
   browser used for QA did not expose `document.modelContext`, so it exercised Manual mode.
 - Dynamic tool removal/appearance in the real judging environment.
-- Public deployment and restart recovery on a Render persistent disk.
+- Cross-revision Firestore recovery after deploying another Cloud Run revision.
 - Docker build. The local Docker client was installed, but its daemon socket did not respond.
 - The full browser error matrix, concurrent browser tabs, and authorization expiry UI.
 - A post-implementation Impeccable critique/audit.
@@ -105,7 +117,7 @@ Docker image.
 2. Decide whether the GitHub repository should be public or private.
 3. Create the GitHub repository, add the remote, and push `main` only after the user
    authorizes the visibility choice.
-4. Deploy the Cloud Run service with Firestore Native mode.
+4. Completed: deploy the Cloud Run service with Firestore Native mode.
 5. Open the deployed URL in a WebMCP-enabled ChatGPT browser and verify all six tools,
    schemas, dynamic lifecycle, visible mutations, authorization boundary, and receipt.
 6. Fix any compatibility differences found in the real browser. Use stable compatibility
