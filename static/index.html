@@ -7,8 +7,8 @@
   <title>Captain's Table</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232f7f76'/%3E%3Cpath d='M8 10h16M8 16h11M8 22h16' stroke='%23f8f6f1' stroke-width='2'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/static/styles.css?v=capability-epochs-1">
-  <link rel="stylesheet" href="/static/workflow.css?v=capability-epochs-1">
-  <link rel="stylesheet" href="/static/polish.css?v=start-over-1">
+  <link rel="stylesheet" href="/static/workflow.css?v=impeccable-workflow-1">
+  <link rel="stylesheet" href="/static/polish.css?v=impeccable-workflow-1">
 </head>
 <body>
   <a class="skip" href="#decision">Skip to active decision</a>
@@ -18,6 +18,7 @@
     <div class="revision" aria-label="Current plan revision"><span class="calibration"><i></i><i id="revision-notch"></i></span><span id="revision">R1 · --------</span></div>
   </header>
   <main>
+    <div class="workflow-column">
     <section class="brief" aria-labelledby="plan-title">
       <p class="eyebrow">New York · October 12–14</p>
       <h1 id="plan-title">A decision surface shared with ChatGPT.</h1>
@@ -27,6 +28,22 @@
 
     <section id="decision" class="decision" aria-labelledby="decision-title">
       <div class="section-heading"><div><p class="eyebrow">Active decision</p><h2 id="decision-title">Can the roadmap session include everyone?</h2></div><span id="status-label" class="status">Not inspected</span></div>
+      <ol id="workflow-stages" class="workflow-stages" aria-label="Workflow progress">
+        <li>Inspect</li><li>Repair</li><li>Review</li><li>Reserve</li>
+      </ol>
+      <p class="workflow-explainer">ChatGPT and this page work on the same live plan. You authorize the exact version before anything is reserved.</p>
+      <p id="operation-status" class="operation-status" role="status" aria-live="polite"></p>
+      <div id="narrow-proof-slot" class="evidence-slot">
+        <aside id="proof-signals" class="proof-strip" aria-label="Live proof signals">
+          <p class="eyebrow">Live proof</p>
+          <dl>
+            <div><dt>Page connection</dt><dd id="proof-connection">Checking</dd></div>
+            <div><dt>Tool version</dt><dd id="proof-epoch">Awaiting registration</dd></div>
+            <div><dt>Agent tool match</dt><dd id="proof-agent">Not reported</dd></div>
+          </dl>
+        </aside>
+      </div>
+      <section id="receipt" class="workflow-region receipt" hidden aria-labelledby="receipt-title"><p class="eyebrow">Reservation confirmed</p><h3 id="receipt-title">The exact authorized plan is reserved.</h3><p class="confirmation" id="confirmation"></p><p>Restoring this receipt never creates a duplicate reservation.</p></section>
       <div id="first-run" class="first-run">
         <p><strong>Start with the first proof.</strong> Ask ChatGPT to find what blocks this plan.</p>
         <div class="prompt"><code>Find the most important conflict in this offsite plan.</code><button id="copy-prompt" class="text-button">Copy prompt</button></div>
@@ -50,36 +67,39 @@
         <div class="actions"><button id="authorize" class="primary">Authorize this version</button><button id="revert" class="text-button">Revert last change</button></div>
         <details><summary>Technical details</summary><dl class="technical"><div><dt>Plan</dt><dd id="auth-hash"></dd></div><div><dt>Scope</dt><dd>reserve_offsite</dd></div><div><dt>Expiry</dt><dd id="auth-expiry">Created after authorization</dd></div></dl></details>
       </section>
-      <section id="receipt" class="workflow-region receipt" hidden aria-labelledby="receipt-title"><p class="eyebrow">Reservation confirmed</p><h3 id="receipt-title">The exact authorized plan is reserved.</h3><p class="confirmation" id="confirmation"></p><p>No duplicate action was created if this receipt was recovered.</p></section>
       <div id="next-actions" class="next-actions"><button id="execute" class="primary">Create reservation</button></div>
       <div id="action-error" class="action-error" role="alert" hidden><strong>Action not completed</strong><p id="action-error-copy"></p><button id="retry-load" class="secondary" hidden>Reload decision</button></div>
     </section>
 
-    <details id="technical-evidence" class="evidence">
-      <summary>Technical evidence</summary>
-      <div class="evidence-content">
-        <p id="mode-copy"></p>
-        <section class="protocol-lab" aria-labelledby="protocol-title">
-          <div class="protocol-heading"><h2 id="protocol-title">Protocol run</h2><span id="protocol-run-state">Collecting</span></div>
-          <dl class="protocol-measures">
-            <div><dt>Page lifecycle</dt><dd id="metric-lifecycle">Awaiting WebMCP</dd></div>
-            <div><dt>Capability epoch</dt><dd id="metric-epoch">Awaiting registration</dd></div>
-            <div><dt>Agent observation</dt><dd id="metric-agent">Not reported</dd></div>
-            <div><dt>Stale capability calls</dt><dd id="metric-stale">Not tested</dd></div>
-            <div><dt>Authorization bypasses</dt><dd id="metric-authorization">Not tested</dd></div>
-            <div><dt>Duplicate executions</dt><dd id="metric-idempotency">Not tested</dd></div>
-            <div><dt>Median visible update</dt><dd id="metric-latency">No samples</dd></div>
-            <div><dt>Receipt recovery</dt><dd id="metric-recovery">Not observed</dd></div>
-          </dl>
-          <p class="protocol-method">Each tool set is bound to its issuing revision. Obsolete callbacks are rejected even if a host retains them. Discovery and removal acknowledgement are not exposed by the current API, so agent observation is explicitly reported.</p>
-          <button id="run-protocol-checks" class="secondary">Run safety checks</button>
-          <details class="trace"><summary>Raw protocol trace</summary><ol id="protocol-events"><li>No protocol events yet.</li></ol></details>
-        </section>
-        <h2 tabindex="-1">Decision trail</h2><ol id="events"><li>No structured actions yet.</li></ol>
-      </div>
-    </details>
+    <div id="narrow-evidence-slot" class="evidence-slot">
+      <details id="technical-evidence" class="evidence">
+        <summary>Technical evidence</summary>
+        <div class="evidence-content">
+          <p id="mode-copy"></p>
+          <section class="protocol-lab" aria-labelledby="protocol-title">
+            <div class="protocol-heading"><h2 id="protocol-title">Protocol run</h2><span id="protocol-run-state">Collecting</span></div>
+            <dl class="protocol-measures">
+              <div><dt>Page tools</dt><dd id="metric-lifecycle">Awaiting WebMCP</dd></div>
+              <div><dt>Tool version</dt><dd id="metric-epoch">Awaiting registration</dd></div>
+              <div><dt>Agent saw current tools</dt><dd id="metric-agent">Not reported</dd></div>
+              <div><dt>Old tool calls blocked</dt><dd id="metric-stale">Not tested</dd></div>
+              <div><dt>Unauthorized executions</dt><dd id="metric-authorization">Not tested</dd></div>
+              <div><dt>Duplicate reservations</dt><dd id="metric-idempotency">Not tested</dd></div>
+              <div><dt>Visible update time</dt><dd id="metric-latency">No samples</dd></div>
+              <div><dt>Receipt restored</dt><dd id="metric-recovery">Not observed</dd></div>
+            </dl>
+            <p class="protocol-method">Each tool set is bound to its issuing revision. Obsolete callbacks are rejected even if a host retains them. Discovery and removal acknowledgement are not exposed by the current API, so agent observation is explicitly reported.</p>
+            <button id="run-protocol-checks" class="secondary">Run safety checks</button>
+            <details class="trace"><summary>Raw protocol trace</summary><ol id="protocol-events"><li>No protocol events yet.</li></ol></details>
+          </section>
+          <h2 tabindex="-1">Decision trail</h2><ol id="events"><li>No structured actions yet.</li></ol>
+        </div>
+      </details>
+    </div>
+    </div>
+    <aside id="wide-evidence-slot" class="evidence-rail" aria-label="WebMCP evidence"></aside>
   </main>
   <div id="announcer" class="sr-only" aria-live="polite"></div>
-  <script type="module" src="/static/app.js?v=start-over-1"></script>
+  <script type="module" src="/static/app.js?v=impeccable-workflow-1"></script>
 </body>
 </html>

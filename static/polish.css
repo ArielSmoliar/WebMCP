@@ -14,6 +14,19 @@
 .secondary:active,
 .text-button:active { transform: translateY(1px); }
 button:disabled { cursor: wait; opacity: 0.55; }
+.workflow-stages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 18px 0 0; padding: 0; list-style: none; counter-reset: stage; }
+.workflow-stages li { position: relative; min-block-size: 44px; padding: 24px 8px 0 0; color: var(--muted); font-size: 12px; border-block-start: 1px solid var(--alloy); }
+.workflow-stages li::before { counter-increment: stage; content: counter(stage); position: absolute; inset-block-start: -11px; inset-inline-start: 0; display: grid; place-items: center; inline-size: 22px; block-size: 22px; border: 1px solid var(--alloy); border-radius: 50%; background: var(--ground); color: var(--muted); font: 600 11px ui-monospace, monospace; }
+.workflow-stages li.is-complete { color: var(--ink); border-color: var(--signal); }
+.workflow-stages li.is-complete::before { content: "✓"; border-color: var(--signal); background: var(--signal-soft); color: var(--signal); }
+.workflow-stages li.is-current { color: var(--ink); font-weight: 650; border-color: var(--signal); }
+.workflow-stages li.is-current::before { border-color: var(--signal); background: var(--signal); color: var(--raised); }
+.workflow-explainer { margin-block: 6px 0; max-inline-size: 68ch; color: var(--muted); font-size: 13px; }
+.operation-status { min-block-size: 1.5em; margin-block: 6px 0; color: var(--signal); font-size: 13px; }
+.decision[data-state="completed"] .workflow-explainer { display: none; }
+.decision[data-state="completed"] .operation-status { margin-block-end: 0; }
+.decision[data-state="completed"] .agenda { margin-block-start: 28px; opacity: 0.68; }
+.decision[data-state="completed"] .finding { opacity: 0.72; }
 
 .action-error {
   margin-block-start: 24px;
@@ -21,6 +34,11 @@ button:disabled { cursor: wait; opacity: 0.55; }
   border: 1px solid var(--danger);
   border-radius: 10px;
   background: var(--danger-soft);
+}
+@media (max-width: 520px) {
+  .workflow-stages li { padding-inline-end: 4px; font-size: 11px; }
+  .receipt { padding: 20px; }
+  .proof-strip dd { max-inline-size: 130px; }
 }
 .action-error p { margin-block: 6px 12px; max-inline-size: 70ch; }
 .action-error strong { color: var(--danger); }
@@ -37,22 +55,33 @@ button:disabled { cursor: wait; opacity: 0.55; }
 .trace summary { min-block-size: 44px; display: flex; align-items: center; }
 #protocol-events { padding: 0; list-style: none; }
 #protocol-events li { padding-block: 8px; border-block-end: 1px solid var(--alloy); font: 11px/1.45 ui-monospace, monospace; overflow-wrap: anywhere; white-space: pre-wrap; }
+.proof-strip { padding-block: 16px; border-block: 1px solid var(--alloy); }
+.proof-strip > .eyebrow { margin-block-end: 8px; }
+.proof-strip dl { margin: 0; }
+.proof-strip dl div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding-block: 7px; }
+.proof-strip dt { color: var(--muted); font-size: 12px; }
+.proof-strip dd { margin: 0; max-inline-size: 150px; color: var(--ink); font: 600 11px/1.35 ui-monospace, monospace; text-align: end; overflow-wrap: anywhere; }
+.evidence { margin-block-start: 8px; }
+.evidence-slot:empty,
+.evidence-rail:empty { display: none; }
 
 @media (min-width: 1100px) {
+  #narrow-proof-slot > .proof-strip,
+  #narrow-evidence-slot > .evidence { display: none; }
   main {
     max-inline-size: 1120px;
     display: grid;
     grid-template-columns: minmax(0, 760px) 280px;
     column-gap: 64px;
+    align-items: start;
   }
-  .brief,
-  .decision { grid-column: 1; }
-  .evidence {
-    grid-column: 2;
-    grid-row: 1 / 3;
+  .workflow-column { min-inline-size: 0; }
+  .evidence-rail {
     align-self: start;
     position: sticky;
     inset-block-start: 88px;
+  }
+  .evidence {
     margin-block-start: 0;
     border-block-start: 1px solid var(--alloy);
   }

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi.testclient import TestClient
 
 import app.main as main
@@ -15,6 +17,16 @@ def test_gate_one_journey(tmp_path):
     assert page.status_code == 200
     assert 'id="start-over"' in page.text
     assert "Start new session" in page.text
+    assert page.text.index('id="workflow-stages"') < page.text.index('id="narrow-proof-slot"') < page.text.index('id="first-run"')
+    assert page.text.index('id="decision"') < page.text.index('id="narrow-evidence-slot"')
+    proof = page.text[page.text.index('<aside id="proof-signals"'):page.text.index("</aside>", page.text.index('<aside id="proof-signals"'))]
+    assert proof.count("<dd id=") == 3
+    assert '<details id="technical-evidence" class="evidence">' in page.text
+    assert "impeccable-workflow-1" in page.text
+    app_js = (Path(main.__file__).parent.parent / "static" / "app.js").read_text()
+    assert "function relocateEvidence(event)" in app_js
+    assert 'document.querySelectorAll("#inspect, #compare, .select-repair, #save-arrival, #authorize, #revert, #execute, #start-over, #run-protocol-checks")' in app_js
+    assert "authorize_plan" not in app_js
     assert web.get("/healthz").json() == {"status": "ok"}
     assert web.get("/health").json() == {"status": "ok"}
     assert web.get("/readyz").json() == {"status": "ready"}

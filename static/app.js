@@ -1,4 +1,4 @@
-const state = { snapshot: null, controller: null, recordedMode: false, protocolBusy: false, currentToolNames: [], capabilityEpoch: null };
+const state = { snapshot: null, controller: null, recordedMode: false, protocolBusy: false, currentToolNames: [], capabilityEpoch: null, busyControl: null, busyLabel: null };
 const $ = (id) => document.getElementById(id);
 const wideScreen = window.matchMedia("(min-width: 1100px)");
 
@@ -11,9 +11,33 @@ const errorCopy = {
   storage_error: "Persistent storage is temporarily unavailable. Try again in a moment.",
 };
 
-function setBusy(busy) {
+const operationCopy = {
+  diagnose: { control: "inspect", label: "Diagnosing…", status: "Inspecting the plan for its blocking constraint…" },
+  repairs: { control: "compare", label: "Comparing…", status: "Comparing two feasible repairs…" },
+  selection: { label: "Selecting…", status: "Applying the selected repair…" },
+  constraint: { control: "save-arrival", label: "Updating…", status: "Updating the arrival constraint…" },
+  authorize: { control: "authorize", label: "Authorizing…", status: "Binding authorization to this exact plan version…" },
+  revert: { control: "revert", label: "Reverting…", status: "Restoring the previous plan…" },
+  execute: { control: "execute", label: "Reserving…", status: "Creating the authorized reservation…" },
+};
+
+function setBusy(busy, operation = {}) {
   $("decision").setAttribute("aria-busy", String(busy));
-  document.querySelectorAll("button").forEach((button) => { button.disabled = busy; });
+  document.querySelectorAll("#inspect, #compare, .select-repair, #save-arrival, #authorize, #revert, #execute, #start-over, #run-protocol-checks").forEach((button) => { button.disabled = busy; });
+  if (busy) {
+    const control = operation.element || (operation.control ? $(operation.control) : null);
+    if (control) {
+      state.busyControl = control;
+      state.busyLabel = control.textContent;
+      if (operation.label) control.textContent = operation.label;
+    }
+    $("operation-status").textContent = operation.status || "Updating the decision…";
+  } else {
+    if (state.busyControl && state.busyLabel) state.busyControl.textContent = state.busyLabel;
+    state.busyControl = null;
+    state.busyLabel = null;
+    $("operation-status").textContent = operation.status || "";
+  }
 }
 
 function showError(error, bootFailure = false) {
@@ -28,8 +52,13 @@ function clearError() {
   $("retry-load").hidden = true;
 }
 
-function syncEvidenceDisclosure(event) {
-  $("technical-evidence").open = event.matches;
+function relocateEvidence(event) {
+  if (event.matches) {
+    $("wide-evidence-slot").append($("proof-signals"), $("technical-evidence"));
+  } else {
+    $("narrow-proof-slot").append($("proof-signals"));
+    $("narrow-evidence-slot").append($("technical-evidence"));
+  }
 }
 
 function protocolEvents() {
@@ -71,6 +100,17 @@ function renderProtocol() {
   $("metric-idempotency").textContent = idempotency?.details.tested ? `${idempotency.details.duplicate ? 1 : 0} duplicates` : "Not tested";
   $("metric-latency").textContent = middle == null ? "No samples" : `${Math.round(middle)} ms`;
   $("metric-recovery").textContent = recovery?.details.same_receipt ? "Verified" : "Not observed";
+  $("proof-epoch").textContent = state.capabilityEpoch?.label || lifecycle?.details.capability_epoch || `R${state.snapshot.revision} · Manual`;
+  $("proof-agent").textContent = observation
+    ? observation.details.observed_revision === state.snapshot.revision
+      && observation.details.epoch_matches === true
+      && observation.details.matched === observation.details.expected
+      && observation.details.observed === observation.details.expected
+      && observation.details.missing?.length === 0
+      && observation.details.unexpected?.length === 0
+      ? `${observation.details.matched}/${observation.details.expected} current`
+      : "Needs refresh"
+    : "Not reported";
   const safetyMeasured = stale?.details.tested && authorization?.details.tested && idempotency?.details.tested;
   $("protocol-run-state").textContent = observation && safetyMeasured ? "Measured" : safetyMeasured ? "Safety measured" : lifecycle ? "Page measured" : unavailable ? "Manual baseline" : "Collecting";
 
@@ -120,8 +160,11 @@ async function request(path, options = {}) {
 
 async function action(route, body, source = "human", expectedRevision = state.snapshot.revision, capabilityEpoch = null) {
   clearError();
-  setBusy(true);
+  const operation = { ...operationCopy[route] };
+  if (route === "selection") operation.element = document.querySelector(`[data-repair="${body.repair_id}"]`);
+  setBusy(true, operation);
   const started = performance.now();
+  let succeeded = false;
   try {
     const snapshot = await request(`/api/session/${state.snapshot.session_id}/${route}`, {
       method: "POST", body: JSON.stringify({ expected_revision: expectedRevision, source, ...body })
@@ -129,13 +172,14 @@ async function action(route, body, source = "human", expectedRevision = state.sn
     render(snapshot, true);
     await registerTools();
     void recordProtocol("action_success", route, performance.now() - started, { source, expected_revision: expectedRevision, capability_epoch: capabilityEpoch, resulting_state: snapshot.state, plan_hash: snapshot.plan_hash });
+    succeeded = true;
     return snapshot;
   } catch (error) {
     showError(error);
     void recordProtocol("action_error", route, performance.now() - started, { source, expected_revision: expectedRevision, capability_epoch: capabilityEpoch, error: error.message });
     throw error;
   } finally {
-    setBusy(false);
+    setBusy(false, { status: succeeded ? `Ready · ${$("status-label").textContent}` : "Action needs attention." });
   }
 }
 
@@ -159,12 +203,23 @@ function comparisonRows(options) {
 
 function render(snapshot, changed = false) {
   state.snapshot = snapshot;
+  $("decision").dataset.state = snapshot.state;
   $("revision").textContent = `R${snapshot.revision} · ${snapshot.plan_hash}`;
   $("revision-notch").style.inlineSize = `${8 + Math.min(snapshot.revision, 8) * 4}px`;
   $("plan-budget").textContent = `$${snapshot.plan.budget.toLocaleString()}`;
   $("plan-arrival").textContent = snapshot.plan.arrival;
   $("roadmap-time").textContent = snapshot.plan.agenda[0].time;
   const rank = { draft: 0, conflict: 1, options: 2, reviewed: 3, authorized: 4, completed: 5 }[snapshot.state];
+  const currentStage = { draft: 0, conflict: 1, options: 1, reviewed: 2, authorized: 2, completed: 3 }[snapshot.state];
+  [...$("workflow-stages").children].forEach((stage, index) => {
+    const complete = index < currentStage || snapshot.state === "completed" && index < 3;
+    const current = index === currentStage;
+    stage.classList.toggle("is-complete", complete);
+    stage.classList.toggle("is-current", current);
+    stage.setAttribute("aria-label", `${stage.textContent}, ${complete ? "completed" : current ? "current step" : "not started"}`);
+    if (index === currentStage) stage.setAttribute("aria-current", "step");
+    else stage.removeAttribute("aria-current");
+  });
   $("first-run").hidden = rank > 0;
   $("finding").hidden = rank < 1;
   $("comparison").hidden = rank < 1 || rank === 5;
@@ -250,6 +305,7 @@ function allowedTools() {
 async function registerTools() {
   if (!document.modelContext?.registerTool) {
     $("connection").textContent = "Manual mode";
+    $("proof-connection").textContent = "Manual mode";
     $("mode-copy").textContent = "This browser does not expose page tools. The same decision remains usable manually.";
     if (!state.recordedMode) {
       state.recordedMode = true;
@@ -276,9 +332,11 @@ async function registerTools() {
     state.currentToolNames = tools.map((tool) => tool.name);
     void recordProtocol("tool_set_registered", `revision_${registration.revision}`, performance.now() - started, { expected: tools.length, registered, tool_names: state.currentToolNames, capability_epoch: registration.label, registered_revision: registration.revision, discovery_acknowledgement: "not_exposed_by_current_api" });
     $("connection").textContent = "WebMCP connected";
+    $("proof-connection").textContent = "WebMCP connected";
     $("mode-copy").textContent = `Live capabilities: ${tools.map((tool) => tool.name).join(", ")}`;
   } catch (error) {
     $("connection").textContent = "Tool access unavailable";
+    $("proof-connection").textContent = "Unavailable";
     $("mode-copy").textContent = "ChatGPT could not access this page's tools. The plan is still usable here.";
     void recordProtocol("registration_error", "registerTool", null, { error: error.message || "registration_failed" });
   }
@@ -288,9 +346,10 @@ async function runProtocolChecks() {
   if (state.protocolBusy || !state.snapshot) return;
   state.protocolBusy = true;
   clearError();
-  setBusy(true);
+  setBusy(true, { control: "run-protocol-checks", label: "Testing…", status: "Running the stale-call, authorization, and duplicate-reservation checks…" });
   $("protocol-run-state").textContent = "Testing";
   const sessionPath = `/api/session/${state.snapshot.session_id}`;
+  let succeeded = false;
   try {
     if (state.snapshot.revision > 1) {
       let accepted = false;
@@ -329,33 +388,37 @@ async function runProtocolChecks() {
     } else {
       await recordProtocol("idempotency_probe", "receipt_replay", null, { tested: false, duplicate: false, reason: "no_receipt" });
     }
+    succeeded = true;
   } catch (error) {
     showError(error);
   } finally {
     state.protocolBusy = false;
-    setBusy(false);
+    setBusy(false, { status: succeeded ? "Safety check results updated." : "Safety checks need attention." });
     renderProtocol();
   }
 }
 
 async function boot() {
   clearError();
-  setBusy(true);
+  setBusy(true, { status: "Loading the current decision…" });
   const started = performance.now();
   let id = localStorage.getItem("captains-table-session");
+  let succeeded = false;
   try {
     try { state.snapshot = id ? await request(`/api/session/${id}`) : null; } catch { state.snapshot = null; }
     if (!state.snapshot) { state.snapshot = await request("/api/session", { method: "POST", body: "{}" }); localStorage.setItem("captains-table-session", state.snapshot.session_id); }
     render(state.snapshot); await registerTools();
     if (id && state.snapshot.receipt) void recordProtocol("receipt_recovered", "page_reload", performance.now() - started, { same_receipt: true, confirmation: state.snapshot.receipt.confirmation });
+    succeeded = true;
   } finally {
-    setBusy(false);
+    setBusy(false, { status: succeeded ? "Decision ready." : "Unable to load the decision." });
   }
 }
 
 async function startNewSession() {
   clearError();
-  setBusy(true);
+  setBusy(true, { control: "start-over", label: "Starting…", status: "Creating a fresh decision session…" });
+  let succeeded = false;
   try {
     const snapshot = await request("/api/session", { method: "POST", body: "{}" });
     localStorage.setItem("captains-table-session", snapshot.session_id);
@@ -363,10 +426,11 @@ async function startNewSession() {
     render(snapshot);
     await registerTools();
     $("announcer").textContent = "Fresh decision session created.";
+    succeeded = true;
   } catch (error) {
     showError(error);
   } finally {
-    setBusy(false);
+    setBusy(false, { status: succeeded ? "Fresh decision ready." : "New session could not be created." });
   }
 }
 
@@ -380,7 +444,7 @@ $("copy-prompt").addEventListener("click", async () => { try { await navigator.c
 $("retry-load").addEventListener("click", () => { window.location.reload(); });
 $("run-protocol-checks").addEventListener("click", () => { void runProtocolChecks(); });
 $("start-over")?.addEventListener("click", () => { void startNewSession(); });
-wideScreen.addEventListener("change", syncEvidenceDisclosure);
-syncEvidenceDisclosure(wideScreen);
+wideScreen.addEventListener("change", relocateEvidence);
+relocateEvidence(wideScreen);
 window.addEventListener("pagehide", () => state.controller?.abort());
 boot().catch((error) => { $("connection").textContent = "Unable to load"; showError(error, true); });
