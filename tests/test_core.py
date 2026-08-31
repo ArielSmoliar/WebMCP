@@ -124,3 +124,15 @@ def test_firestore_full_journey_and_replay():
     assert state["state"] == "completed"
     replay = store.execute(state["session_id"], 1, "firestore-run-001", "webmcp")
     assert replay["receipt"] == state["receipt"]
+
+    event = store.record_protocol_event(state["session_id"], {
+        "event_type": "receipt_recovered",
+        "name": "reload",
+        "revision": state["revision"],
+        "duration_ms": 12.5,
+        "details": {"same_receipt": True},
+    })
+    restored = store.get(state["session_id"])
+    assert event["event_type"] == "receipt_recovered"
+    assert restored["revision"] == state["revision"]
+    assert restored["protocol_events"][0]["details"]["same_receipt"] is True

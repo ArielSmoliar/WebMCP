@@ -29,6 +29,21 @@ def test_gate_one_journey(tmp_path):
     restored = web.get(f"/api/session/{snapshot['session_id']}")
     assert restored.json() == diagnosed.json()
 
+    telemetry = web.post(
+        f"/api/session/{snapshot['session_id']}/protocol-events",
+        json={
+            "event_type": "registration_success",
+            "name": "diagnose_plan",
+            "revision": diagnosed.json()["revision"],
+            "duration_ms": 8.4,
+            "details": {"source": "page"},
+        },
+    )
+    assert telemetry.status_code == 201
+    after_telemetry = web.get(f"/api/session/{snapshot['session_id']}").json()
+    assert after_telemetry["revision"] == diagnosed.json()["revision"]
+    assert after_telemetry["protocol_events"][0]["name"] == "diagnose_plan"
+
 
 def test_strict_and_stale_requests(tmp_path):
     web = client(tmp_path)
@@ -40,6 +55,12 @@ def test_strict_and_stale_requests(tmp_path):
     stale = web.post(endpoint, json={"expected_revision": 1, "source": "webmcp"})
     assert stale.status_code == 409
     assert stale.json()["detail"] == "stale_state"
+
+    oversized = web.post(
+        f"/api/session/{snapshot['session_id']}/protocol-events",
+        json={"event_type": "agent_observation", "name": "reported", "revision": 2, "details": {"raw": "x" * 5000}},
+    )
+    assert oversized.status_code == 422
 
 
 def test_full_api_journey(tmp_path):

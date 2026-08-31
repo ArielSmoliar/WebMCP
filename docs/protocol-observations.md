@@ -10,6 +10,29 @@ results, conditional capabilities, and multiple state transitions on one page.
 - JSON Schema gives the agent bounded choices without scraping presentation markup.
 - Tool callbacks can reuse the same action controller as direct human controls.
 
+## What the Protocol Lab measures
+
+Every measurement is persisted with the session without advancing the workflow
+revision. The evidence rail reports:
+
+- registration acceptance and duration for each page tool;
+- aggregate tool-set registration and abort-based removal at each revision;
+- mutation-to-visible-render latency;
+- intentionally stale revision rejection;
+- execution attempts without authorization;
+- idempotent replay against the original receipt key;
+- receipt recovery after a page reload;
+- the difference between the expected page tool set and the set explicitly
+  reported by the agent through `report_observed_capabilities`.
+
+The page does not label a successful `registerTool()` call as agent discovery.
+Registration is page-measured. Discovery remains agent-reported because the
+current API provides no discovery acknowledgement back to the page.
+
+Protocol events are diagnostic evidence, not cryptographic attestation of agent
+identity. Timestamps are server-recorded, durations are page-measured, and the
+agent-observation record is explicitly self-reported through a page tool.
+
 ## What a future version could improve
 
 ### Native structured output
@@ -33,6 +56,13 @@ around rapid tool changes.
 
 Standard progress, cancellation, source, and completion events would let pages
 render trustworthy evidence without wrapping every callback independently.
+
+### Discovery acknowledgement
+
+A page can measure that registration resolved, but not when an agent observes the
+new capability or stops observing a removed one. A future lifecycle event or
+registration-state API would let applications measure propagation latency and
+capability-set accuracy without asking the agent to report its own view.
 
 ### Background lifecycle
 

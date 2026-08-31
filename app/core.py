@@ -60,6 +60,7 @@ class Store:
             "plan_hash": canonical_hash(SCENARIO),
             "finding": None,
             "events": [],
+            "protocol_events": [],
         }
         with self.connect() as db:
             db.execute(
@@ -72,6 +73,26 @@ class Store:
         with self.connect() as db:
             row = db.execute("SELECT payload FROM sessions WHERE id = ?", (session_id,)).fetchone()
         return json.loads(row["payload"]) if row else None
+
+    def record_protocol_event(self, session_id: str, event: dict[str, Any]) -> dict[str, Any]:
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT payload FROM sessions WHERE id = ?", (session_id,)).fetchone()
+            if not row:
+                raise KeyError("not_found")
+            payload = json.loads(row["payload"])
+            recorded = {
+                "id": secrets.token_hex(6),
+                "recorded_at": datetime.now(UTC).isoformat(),
+                **event,
+            }
+            payload.setdefault("protocol_events", []).insert(0, recorded)
+            payload["protocol_events"] = payload["protocol_events"][:100]
+            db.execute(
+                "UPDATE sessions SET payload=?, updated_at=? WHERE id=?",
+                (json.dumps(payload), datetime.now(UTC).isoformat(), session_id),
+            )
+        return recorded
 
     def diagnose(self, session_id: str, expected_revision: int, source: str) -> dict[str, Any]:
         with self.connect() as db:
@@ -243,6 +264,7 @@ class FirestoreStore(Store):
             "plan_hash": canonical_hash(SCENARIO),
             "finding": None,
             "events": [],
+            "protocol_events": [],
         }
         self.collection.document(session_id).create({
             "payload": payload,
@@ -305,6 +327,29 @@ class FirestoreStore(Store):
 
     def mutate(self, session_id: str, expected_revision: int, operation) -> dict[str, Any]:
         return self._transactional_mutation(session_id, expected_revision, operation)
+
+    def record_protocol_event(self, session_id: str, event: dict[str, Any]) -> dict[str, Any]:
+        document = self.collection.document(session_id)
+        transaction = self.client.transaction()
+
+        @self._firestore.transactional
+        def apply(transaction):
+            snapshot = document.get(transaction=transaction)
+            if not snapshot.exists:
+                raise KeyError("not_found")
+            data = snapshot.to_dict()
+            payload = data["payload"]
+            recorded = {
+                "id": secrets.token_hex(6),
+                "recorded_at": datetime.now(UTC).isoformat(),
+                **event,
+            }
+            payload.setdefault("protocol_events", []).insert(0, recorded)
+            payload["protocol_events"] = payload["protocol_events"][:100]
+            transaction.set(document, {**data, "payload": payload, "updated_at": datetime.now(UTC)})
+            return recorded
+
+        return apply(transaction)
 
     def execute(self, session_id: str, expected_revision: int, idempotency_key: str, source: str) -> dict[str, Any]:
         document = self.collection.document(session_id)

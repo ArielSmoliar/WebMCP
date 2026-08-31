@@ -1,4 +1,4 @@
-const state = { snapshot: null, controller: null };
+const state = { snapshot: null, controller: null, recordedMode: false, protocolBusy: false, currentToolNames: [] };
 const $ = (id) => document.getElementById(id);
 const wideScreen = window.matchMedia("(min-width: 1100px)");
 
@@ -32,6 +32,85 @@ function syncEvidenceDisclosure(event) {
   $("technical-evidence").open = event.matches;
 }
 
+function protocolEvents() {
+  return state.snapshot?.protocol_events || [];
+}
+
+function latestProtocol(eventType, currentRevision = false) {
+  return protocolEvents().find((event) => event.event_type === eventType && (!currentRevision || event.revision === state.snapshot.revision));
+}
+
+function median(values) {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+function renderProtocol() {
+  if (!state.snapshot) return;
+  const lifecycle = latestProtocol("tool_set_registered", true);
+  const unavailable = latestProtocol("webmcp_unavailable", true);
+  const observation = latestProtocol("agent_observation");
+  const stale = latestProtocol("stale_probe", true);
+  const authorization = latestProtocol("authorization_probe", true);
+  const idempotency = latestProtocol("idempotency_probe", true);
+  const recovery = latestProtocol("receipt_recovered", true);
+  const durations = protocolEvents().filter((event) => event.event_type === "action_success" && event.duration_ms != null).map((event) => event.duration_ms);
+  const middle = median(durations);
+
+  $("metric-lifecycle").textContent = lifecycle ? `${lifecycle.details.registered}/${lifecycle.details.expected} page-accepted` : "Awaiting WebMCP";
+  $("metric-agent").textContent = observation
+    ? observation.details.observed_revision === state.snapshot.revision
+      ? `${observation.details.matched}/${observation.details.expected} reported`
+      : `Stale report from R${observation.details.observed_revision}`
+    : "Not reported";
+  $("metric-stale").textContent = stale?.details.tested ? `${stale.details.accepted ? 1 : 0} accepted` : "Not tested";
+  $("metric-authorization").textContent = authorization?.details.tested ? `${authorization.details.bypassed ? 1 : 0} accepted` : "Not tested";
+  $("metric-idempotency").textContent = idempotency?.details.tested ? `${idempotency.details.duplicate ? 1 : 0} duplicates` : "Not tested";
+  $("metric-latency").textContent = middle == null ? "No samples" : `${Math.round(middle)} ms`;
+  $("metric-recovery").textContent = recovery?.details.same_receipt ? "Verified" : "Not observed";
+  const safetyMeasured = stale?.details.tested && authorization?.details.tested && idempotency?.details.tested;
+  $("protocol-run-state").textContent = observation && safetyMeasured ? "Measured" : safetyMeasured ? "Safety measured" : lifecycle ? "Page measured" : unavailable ? "Manual baseline" : "Collecting";
+
+  const list = $("protocol-events");
+  list.replaceChildren();
+  const events = protocolEvents().slice(0, 16);
+  if (!events.length) {
+    const item = document.createElement("li");
+    item.textContent = "No protocol events yet.";
+    list.append(item);
+    return;
+  }
+  events.forEach((event) => {
+    const item = document.createElement("li");
+    const duration = event.duration_ms == null ? "" : ` · ${Math.round(event.duration_ms)} ms`;
+    const time = new Date(event.recorded_at).toISOString().slice(11, 23);
+    const raw = JSON.stringify(event.details);
+    const detail = raw.length > 240 ? `${raw.slice(0, 237)}...` : raw;
+    item.textContent = `${time} · R${event.revision} · ${event.event_type} · ${event.name}${duration}\n${detail}`;
+    list.append(item);
+  });
+}
+
+async function recordProtocol(eventType, name, durationMs = null, details = {}) {
+  if (!state.snapshot) return null;
+  try {
+    const recorded = await request(`/api/session/${state.snapshot.session_id}/protocol-events`, {
+      method: "POST",
+      body: JSON.stringify({ event_type: eventType, name, revision: state.snapshot.revision, duration_ms: durationMs, details }),
+    });
+    state.snapshot.protocol_events ||= [];
+    state.snapshot.protocol_events.unshift(recorded);
+    state.snapshot.protocol_events = state.snapshot.protocol_events.slice(0, 100);
+    renderProtocol();
+    return recorded;
+  } catch {
+    $("protocol-run-state").textContent = "Evidence unavailable";
+    return null;
+  }
+}
+
 async function request(path, options = {}) {
   const response = await fetch(path, { headers: { "Content-Type": "application/json" }, ...options });
   if (!response.ok) throw new Error((await response.json()).detail || "request_failed");
@@ -41,15 +120,18 @@ async function request(path, options = {}) {
 async function action(route, body, source = "human") {
   clearError();
   setBusy(true);
+  const started = performance.now();
   try {
     const snapshot = await request(`/api/session/${state.snapshot.session_id}/${route}`, {
       method: "POST", body: JSON.stringify({ expected_revision: state.snapshot.revision, source, ...body })
     });
     render(snapshot, true);
     await registerTools();
+    void recordProtocol("action_success", route, performance.now() - started, { source, resulting_state: snapshot.state, plan_hash: snapshot.plan_hash });
     return snapshot;
   } catch (error) {
     showError(error);
+    void recordProtocol("action_error", route, performance.now() - started, { source, error: error.message });
     throw error;
   } finally {
     setBusy(false);
@@ -108,6 +190,7 @@ function render(snapshot, changed = false) {
   }
   if (snapshot.receipt) $("confirmation").textContent = snapshot.receipt.confirmation;
   $("events").innerHTML = snapshot.events.length ? snapshot.events.map((event) => `<li><code>${event.action}</code><span>${event.summary}</span><small>R${event.revision} · ${event.source}</small></li>`).join("") : "<li>No structured actions yet.</li>";
+  renderProtocol();
   if (changed) $("announcer").textContent = snapshot.events[0]?.summary || "The decision changed.";
 }
 
@@ -118,6 +201,29 @@ function allowedTools() {
   if (["options", "reviewed", "authorized"].includes(state.snapshot.state)) base.push({ name: "select_repair", title: "Select a repair", description: "Select one exact repair. Use shift for the arrival-safe schedule or remote for remote access.", inputSchema: { type: "object", properties: { repair_id: { type: "string", enum: ["shift", "remote"] } }, required: ["repair_id"], additionalProperties: false }, execute: async ({ repair_id }) => { await action("selection", { repair_id }, "webmcp"); return toolResult("Selected a repair."); } });
   if (state.snapshot.state === "reviewed") base.push({ name: "prepare_authorization", title: "Prepare human review", description: "Focus the exact-plan review. This tool cannot authorize it.", execute: async () => { $("review").scrollIntoView({ behavior: "smooth" }); return toolResult("Human review is ready. Authorization still requires the page control."); } });
   if (state.snapshot.state === "authorized") base.push({ name: "execute_authorized_plan", title: "Create the authorized reservation", description: "Execute the exact human-authorized plan and return its receipt.", inputSchema: { type: "object", properties: { idempotency_key: { type: "string", minLength: 8 } }, required: ["idempotency_key"], additionalProperties: false }, execute: async ({ idempotency_key }) => { await action("execute", { idempotency_key }, "webmcp"); return toolResult("Created the reservation receipt.", state.snapshot.receipt); } });
+  const expected = [...base.map((tool) => tool.name), "report_observed_capabilities"];
+  base.push({
+    name: "report_observed_capabilities",
+    title: "Report observed page capabilities",
+    description: "Diagnostic: report the WebMCP tool names currently visible to you so the page can compare agent-observed capabilities with its expected registration set.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        tool_names: { type: "array", items: { type: "string" }, minItems: 1, maxItems: 20 },
+        observed_revision: { type: "integer", minimum: 1 },
+      },
+      required: ["tool_names", "observed_revision"],
+      additionalProperties: false,
+    },
+    execute: async ({ tool_names, observed_revision }) => {
+      const observed = [...new Set(tool_names)];
+      const matched = expected.filter((name) => observed.includes(name));
+      const missing = expected.filter((name) => !observed.includes(name));
+      const unexpected = observed.filter((name) => !expected.includes(name));
+      await recordProtocol("agent_observation", "reported_tool_set", null, { expected: expected.length, observed: observed.length, matched: matched.length, missing, unexpected, observed_revision });
+      return toolResult("Compared agent-observed capabilities with the page registration set.", { expected, observed, missing, unexpected });
+    },
+  });
   return base;
 }
 
@@ -125,28 +231,102 @@ async function registerTools() {
   if (!document.modelContext?.registerTool) {
     $("connection").textContent = "Manual mode";
     $("mode-copy").textContent = "This browser does not expose page tools. The same decision remains usable manually.";
+    if (!state.recordedMode) {
+      state.recordedMode = true;
+      void recordProtocol("webmcp_unavailable", "document.modelContext", null, { page_capability: false });
+    }
     return;
   }
-  state.controller?.abort(); state.controller = new AbortController();
+  if (state.controller) {
+    state.controller.abort();
+    if (state.currentToolNames.length) void recordProtocol("tool_set_removed", "state_transition", null, { tool_names: state.currentToolNames });
+  }
+  state.controller = new AbortController();
   try {
     const tools = allowedTools();
-    for (const tool of tools) await document.modelContext.registerTool({ inputSchema: { type: "object", properties: {}, additionalProperties: false }, ...tool }, { signal: state.controller.signal });
+    const started = performance.now();
+    let registered = 0;
+    for (const tool of tools) {
+      const toolStarted = performance.now();
+      await document.modelContext.registerTool({ inputSchema: { type: "object", properties: {}, additionalProperties: false }, ...tool }, { signal: state.controller.signal });
+      registered += 1;
+      void recordProtocol("registration_success", tool.name, performance.now() - toolStarted, { page_accepted: true });
+    }
+    state.currentToolNames = tools.map((tool) => tool.name);
+    void recordProtocol("tool_set_registered", `revision_${state.snapshot.revision}`, performance.now() - started, { expected: tools.length, registered, tool_names: state.currentToolNames });
     $("connection").textContent = "WebMCP connected";
     $("mode-copy").textContent = `Live capabilities: ${tools.map((tool) => tool.name).join(", ")}`;
-  } catch {
+  } catch (error) {
     $("connection").textContent = "Tool access unavailable";
     $("mode-copy").textContent = "ChatGPT could not access this page's tools. The plan is still usable here.";
+    void recordProtocol("registration_error", "registerTool", null, { error: error.message || "registration_failed" });
+  }
+}
+
+async function runProtocolChecks() {
+  if (state.protocolBusy || !state.snapshot) return;
+  state.protocolBusy = true;
+  clearError();
+  setBusy(true);
+  $("protocol-run-state").textContent = "Testing";
+  const sessionPath = `/api/session/${state.snapshot.session_id}`;
+  try {
+    if (state.snapshot.revision > 1) {
+      let accepted = false;
+      let response = "accepted";
+      try {
+        await request(`${sessionPath}/diagnose`, { method: "POST", body: JSON.stringify({ expected_revision: state.snapshot.revision - 1, source: "human" }) });
+        accepted = true;
+      } catch (error) {
+        response = error.message;
+      }
+      await recordProtocol("stale_probe", "outdated_revision", null, { tested: true, accepted, response });
+    } else {
+      await recordProtocol("stale_probe", "outdated_revision", null, { tested: false, accepted: false, reason: "revision_one" });
+    }
+
+    if (state.snapshot.state !== "authorized") {
+      let bypassed = false;
+      let response = "accepted";
+      try {
+        await request(`${sessionPath}/execute`, { method: "POST", body: JSON.stringify({ expected_revision: state.snapshot.revision, source: "human", idempotency_key: `probe-${crypto.randomUUID()}` }) });
+        bypassed = true;
+      } catch (error) {
+        response = error.message;
+      }
+      await recordProtocol("authorization_probe", "execute_without_authorization", null, { tested: true, bypassed, response });
+    } else {
+      await recordProtocol("authorization_probe", "execute_without_authorization", null, { tested: false, bypassed: false, reason: "currently_authorized" });
+    }
+
+    if (state.snapshot.receipt) {
+      const replay = await request(`${sessionPath}/execute`, {
+        method: "POST",
+        body: JSON.stringify({ expected_revision: 1, source: "human", idempotency_key: state.snapshot.receipt.idempotency_key }),
+      });
+      await recordProtocol("idempotency_probe", "receipt_replay", null, { tested: true, duplicate: replay.receipt.confirmation !== state.snapshot.receipt.confirmation, confirmation: replay.receipt.confirmation });
+    } else {
+      await recordProtocol("idempotency_probe", "receipt_replay", null, { tested: false, duplicate: false, reason: "no_receipt" });
+    }
+  } catch (error) {
+    showError(error);
+  } finally {
+    state.protocolBusy = false;
+    setBusy(false);
+    renderProtocol();
   }
 }
 
 async function boot() {
   clearError();
   setBusy(true);
+  const started = performance.now();
   let id = localStorage.getItem("captains-table-session");
   try {
     try { state.snapshot = id ? await request(`/api/session/${id}`) : null; } catch { state.snapshot = null; }
     if (!state.snapshot) { state.snapshot = await request("/api/session", { method: "POST", body: "{}" }); localStorage.setItem("captains-table-session", state.snapshot.session_id); }
     render(state.snapshot); await registerTools();
+    if (id && state.snapshot.receipt) void recordProtocol("receipt_recovered", "page_reload", performance.now() - started, { same_receipt: true, confirmation: state.snapshot.receipt.confirmation });
   } finally {
     setBusy(false);
   }
@@ -160,6 +340,7 @@ $("revert").addEventListener("click", () => { void action("revert", {}).catch(()
 $("execute").addEventListener("click", () => { void action("execute", { idempotency_key: crypto.randomUUID() }).catch(() => {}); });
 $("copy-prompt").addEventListener("click", async () => { try { await navigator.clipboard.writeText("Find the most important conflict in this offsite plan."); $("copy-prompt").textContent = "Copied"; } catch (error) { showError(error); } });
 $("retry-load").addEventListener("click", () => { window.location.reload(); });
+$("run-protocol-checks").addEventListener("click", () => { void runProtocolChecks(); });
 wideScreen.addEventListener("change", syncEvidenceDisclosure);
 syncEvidenceDisclosure(wideScreen);
 window.addEventListener("pagehide", () => state.controller?.abort());

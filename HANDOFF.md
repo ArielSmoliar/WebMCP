@@ -35,7 +35,7 @@ The demo is a reusable reference for a trustworthy shared decision surface opera
 by a human and ChatGPT's browser agent. The offsite plan is the demonstration
 scenario, not the intended product boundary.
 
-The page exposes six imperative WebMCP tools:
+The page exposes six imperative workflow tools:
 
 1. `inspect_decision`
 2. `diagnose_plan`
@@ -43,6 +43,11 @@ The page exposes six imperative WebMCP tools:
 4. `select_repair`
 5. `prepare_authorization`
 6. `execute_authorized_plan`
+
+It also exposes one diagnostic tool, `report_observed_capabilities`, which lets
+ChatGPT report the tool set it currently sees. The Protocol Lab compares that
+agent-reported set with the page's expected registration set. Do not describe a
+resolved `registerTool()` promise as proof that the agent observed the tool.
 
 Only the direct page UI can authorize the exact plan. There is deliberately no
 `authorize_plan` WebMCP tool.
@@ -53,6 +58,8 @@ Only the direct page UI can authorize the exact plan. There is deliberately no
 - Deterministic workflow with SQLite and Firestore adapters in `app/core.py`
 - Semantic product interface in `static/index.html`
 - Shared human/WebMCP action controller in `static/app.js`
+- Persisted Protocol Lab telemetry in both storage adapters and the Technical
+  Evidence rail
 - Base tokens and layout in `static/styles.css` and `static/workflow.css`
 - Docker and Cloud Run deployment configuration in `Dockerfile` and
   `docs/deploy-google-cloud.md`
@@ -123,7 +130,7 @@ Docker image.
 3. Create the GitHub repository, add the remote, and push `main` only after the user
    authorizes the visibility choice.
 4. Completed: deploy the Cloud Run service with Firestore Native mode.
-5. Open the deployed URL in a WebMCP-enabled ChatGPT browser and verify all six tools,
+5. Open the deployed URL in a WebMCP-enabled ChatGPT browser and verify all six workflow tools plus the diagnostic reporting tool,
    schemas, dynamic lifecycle, visible mutations, authorization boundary, and receipt.
 6. Fix any compatibility differences found in the real browser. Use stable compatibility
    mode only if dynamic propagation is unreliable, and label it honestly.

@@ -1,10 +1,10 @@
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.core import build_store
 
@@ -48,6 +48,24 @@ class ExecuteRequest(DiagnoseRequest):
     idempotency_key: str = Field(min_length=8, max_length=100)
 
 
+class ProtocolEventRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    event_type: str = Field(pattern=r"^[a-z][a-z0-9_]{2,39}$")
+    name: str = Field(min_length=1, max_length=80)
+    revision: int = Field(ge=1)
+    duration_ms: float | None = Field(default=None, ge=0, le=120000)
+    details: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("details")
+    @classmethod
+    def bounded_details(cls, details: dict[str, Any]) -> dict[str, Any]:
+        import json
+
+        if len(json.dumps(details)) > 4000:
+            raise ValueError("details_too_large")
+        return details
+
+
 @app.get("/", include_in_schema=False)
 def index() -> FileResponse:
     return FileResponse(ROOT / "static" / "index.html")
@@ -79,6 +97,14 @@ def get_session(session_id: str) -> dict:
     if not result:
         raise HTTPException(404, detail="not_found")
     return result
+
+
+@app.post("/api/session/{session_id}/protocol-events", status_code=201)
+def protocol_event(session_id: str, request: ProtocolEventRequest) -> dict:
+    try:
+        return store.record_protocol_event(session_id, request.model_dump())
+    except KeyError as exc:
+        raise HTTPException(404, detail="not_found") from exc
 
 
 @app.post("/api/session/{session_id}/diagnose")

@@ -56,7 +56,25 @@
 
     <details id="technical-evidence" class="evidence">
       <summary>Technical evidence</summary>
-      <div class="evidence-content"><p id="mode-copy"></p><h2 tabindex="-1">Decision trail</h2><ol id="events"><li>No structured actions yet.</li></ol></div>
+      <div class="evidence-content">
+        <p id="mode-copy"></p>
+        <section class="protocol-lab" aria-labelledby="protocol-title">
+          <div class="protocol-heading"><h2 id="protocol-title">Protocol run</h2><span id="protocol-run-state">Collecting</span></div>
+          <dl class="protocol-measures">
+            <div><dt>Page lifecycle</dt><dd id="metric-lifecycle">Awaiting WebMCP</dd></div>
+            <div><dt>Agent observation</dt><dd id="metric-agent">Not reported</dd></div>
+            <div><dt>Stale mutations</dt><dd id="metric-stale">Not tested</dd></div>
+            <div><dt>Authorization bypasses</dt><dd id="metric-authorization">Not tested</dd></div>
+            <div><dt>Duplicate executions</dt><dd id="metric-idempotency">Not tested</dd></div>
+            <div><dt>Median visible update</dt><dd id="metric-latency">No samples</dd></div>
+            <div><dt>Receipt recovery</dt><dd id="metric-recovery">Not observed</dd></div>
+          </dl>
+          <p class="protocol-method">Page measurements are automatic. Agent observation is explicitly agent-reported because WebMCP does not expose discovery acknowledgement to the page.</p>
+          <button id="run-protocol-checks" class="secondary">Run safety checks</button>
+          <details class="trace"><summary>Raw protocol trace</summary><ol id="protocol-events"><li>No protocol events yet.</li></ol></details>
+        </section>
+        <h2 tabindex="-1">Decision trail</h2><ol id="events"><li>No structured actions yet.</li></ol>
+      </div>
     </details>
   </main>
   <div id="announcer" class="sr-only" aria-live="polite"></div>

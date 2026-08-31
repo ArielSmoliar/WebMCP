@@ -5,10 +5,16 @@ browser agent operate one live decision surface together. The agent can inspect,
 diagnose, compare, select, and execute structured actions. Only the human can
 authorize the exact plan.
 
-The product demonstrates six state-aware imperative WebMCP tools, dynamic tool
-registration, exact-plan human authorization, stale-state invalidation, durable
-persistence, and idempotent receipt recovery. The page remains fully usable when
-WebMCP is unavailable.
+The product demonstrates six state-aware workflow tools, one diagnostic capability
+reporting tool, dynamic registration, exact-plan human authorization, stale-state
+invalidation, durable persistence, and idempotent receipt recovery. The page
+remains fully usable when WebMCP is unavailable.
+
+Its Protocol Lab records page-side registration acceptance, tool-set removal,
+invocation latency, stale-state rejection, authorization probes, idempotent replay,
+and receipt recovery. Agent discovery is labeled separately because current WebMCP
+does not acknowledge to the page which tools the agent can see. ChatGPT can call
+`report_observed_capabilities` to supply that missing observation explicitly.
 
 ## Run locally
 
