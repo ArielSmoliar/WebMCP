@@ -11,6 +11,10 @@ def client(tmp_path) -> TestClient:
 
 def test_gate_one_journey(tmp_path):
     web = client(tmp_path)
+    page = web.get("/")
+    assert page.status_code == 200
+    assert 'id="start-over"' in page.text
+    assert "Start new session" in page.text
     assert web.get("/healthz").json() == {"status": "ok"}
     assert web.get("/health").json() == {"status": "ok"}
     assert web.get("/readyz").json() == {"status": "ready"}

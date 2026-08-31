@@ -137,8 +137,11 @@ progress events, completion status, retry intent, and idempotency guidance.
 **Observed:** ChatGPT app version `26.818.61809` build `7019` bundles WebMCP
 support, while the connected in-app-browser production tab advertises only
 `pageAssets`; direct lookup reports `Capability is not available: webmcp`.
-Official documentation currently exposes no enablement switch or supported-host
-matrix.
+Official OpenAI documentation now identifies the ChatGPT desktop app's built-in
+browser as the supported site-tools surface, requires GPT-5.6 Sol or Terra,
+states that Luna has WebMCP disabled, excludes Enterprise and Edu workspaces,
+and notes that availability remains rollout-dependent. It does not identify the
+Chrome extension as the supported host surface or expose an enablement switch.
 
 **Impact:** Builders cannot readily determine whether a failure is caused by
 page compatibility, browser version, account rollout, host backend, or an
@@ -175,8 +178,62 @@ browser API enabled, page registration accepted, host attached, tool set
 observed, tool callable, and removal propagated. Each layer should provide a
 coarse failure reason without leaking sensitive host state.
 
-**Evidence status:** Confirmed on Chrome 151 with the WebMCP Origin Trial token,
-ChatGPT browser extension connected, and Captain's Table revision 7.
+**Evidence status:** Confirmed twice on Chrome 151 with the WebMCP Origin Trial
+token, ChatGPT browser extension connected, and Captain's Table revision 7. The
+approved run at `2026-08-31T21:45:33Z` again measured 3/3 page registrations at
+epoch `R1 · 94CBFBDC`, while the host inventory exposed only `pageAssets`.
+The run stopped before discovery or invocation, as required; this is layered
+readiness evidence, not host discovery evidence.
+
+An additional approved check at `2026-08-31T21:54:46Z` used the officially
+documented ChatGPT desktop built-in browser. The completed page accepted 2/2
+registrations at epoch `R6 · 19C3FFBF`, but the host capability inventory again
+contained only `pageAssets`. This confirms the layered-readiness gap on the
+documented surface for this session; it does not identify whether model,
+workspace, or rollout eligibility is the cause.
+
+Local task metadata confirms the active model is `gpt-5.6-sol`, and the app
+classifies the task as local Codex rather than Enterprise/Edu ChatGPT. A safe
+host diagnostic should therefore report that the remaining reason is rollout or
+session enablement instead of leaving all eligibility causes indistinguishable.
+
+After updating to ChatGPT `26.825.51511` build `7377` and restarting, the same
+built-in production tab advertised native `webmcp`. At
+`2026-08-31T22:18:55Z`, the host fetched the exact completed-state tool set and
+successfully invoked both diagnostic reporting and read-only inspection. This
+demonstrates that the prior `pageAssets`-only result was host-version or
+session-enablement dependent rather than a page compatibility failure. The
+remaining lifecycle questions concern dynamic replacement and whether hosts
+surface explicit removal acknowledgement.
+
+A subsequent check at `2026-08-31T22:21:24Z` reclaimed the existing Chrome 151
+production draft tab. The updated Chrome-control host still advertised only
+`pageAssets`, with no native `webmcp` capability, so the run stopped before page
+interaction or mutation. This sharpens the compatibility result: the updated
+desktop built-in browser supports native host discovery, while the connected
+Chrome extension remains a page-enablement-only surface in this environment.
+
+The updated built-in host subsequently completed the full six-revision
+lifecycle. It fetched exact current sets at every revision, reported matching
+epochs from `R1 · 94CBFBDC` through `R6 · 19C3FFBF`, and visibly invoked all
+state-changing agent steps. Human authorization remained page-only at R4; the
+host received `execute_authorized_plan` only at R5 and the completed page exposed
+only inspection and diagnostic reporting at R6.
+
+The strongest removal-related observation came from retaining the R5 host tool
+object across completion. A later call to its obsolete `diagnose_plan` entry was
+rejected by the host with `WebMCP tool registration is stale. Call fetchTools()
+again.` This is direct stale-handle behavior and host-observed replacement. It
+still is not explicit removal acknowledgement from the registration API. A
+future host API should expose a structured set-change notification or removal
+acknowledgement so agents do not need to infer replacement from a failed call
+and refetch instruction.
+
+Receipt `CT-79ECA1` was created exactly once, recovered after reload, and returned
+unchanged by idempotent replay. Persisted probes also rejected a stale revision
+and unauthorized execution. The lifecycle therefore validates revision-bound
+capabilities as a practical application safety layer while showing that hosts
+would benefit from first-class capability-set versioning and replacement events.
 
 ## Further questions to test
 

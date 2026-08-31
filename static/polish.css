@@ -4,6 +4,10 @@
   --danger-soft: oklch(94% 0.03 28);
 }
 
+.product-nav { display: flex; align-items: center; gap: 16px; min-inline-size: 0; }
+.wordmark { white-space: nowrap; }
+.session-reset { min-block-size: 36px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+
 .primary:hover { background: var(--signal-hover); }
 .secondary:hover { border-color: var(--signal); background: var(--signal-soft); }
 .primary:active,

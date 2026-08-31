@@ -8,13 +8,13 @@ The dedicated local Git repository is `/Users/arielsmoliar/Documents/ChatGPT/Web
 It is separate from Offsite Captain, Resurface, Flare AI, Stagehand, and loco-agent.
 
 - Branch: `main`
-- Current checkpoint: `a7eabab feat: enable Chrome WebMCP origin trial`
+- Current checkpoint: `22bcd49 docs: add WebMCP host verification runbook`
 - Working tree before this final handoff update: clean
 - Git remote: `https://github.com/ArielSmoliar/WebMCP.git`
 - Public repository: `https://github.com/ArielSmoliar/WebMCP`
 - Deployment: `https://captains-table-webmcp-1017459622661.us-east1.run.app`
 - Cloud Run service: `captains-table-webmcp`, revision
-  `captains-table-webmcp-00007-hft`, project `offsite-captain-2026`, region
+  `captains-table-webmcp-00009-z6j`, project `offsite-captain-2026`, region
   `us-east1`
 - Firestore: deletion-protected named database `captains-table`; runtime IAM is
   conditionally restricted to that database
@@ -143,6 +143,75 @@ returns the existing receipt on replay.
   `R1 · 94CBFBDC`. The connected ChatGPT Chrome extension still advertised only
   `pageAssets`; native host lookup returned `Capability is not available:
   webmcp`. This is page-enablement evidence, not host discovery or invocation.
+- The approved host-verification run stopped at its mandatory capability gate at
+  `2026-08-31T21:45:33Z`. Production health and readiness passed, revision
+  `captains-table-webmcp-00007-hft` served 100% of traffic, and a fresh Chrome
+  `151.0.7922.174` tab loaded draft state `R1 · DA4F4EFF`. The page again
+  displayed **WebMCP connected**, accepted 3/3 registrations, and emitted epoch
+  `R1 · 94CBFBDC`, while the ChatGPT Chrome host advertised only `pageAssets`.
+  Per the runbook, no host tool fetch, WebMCP invocation, page click, workflow
+  mutation, authorization, receipt, or safety probe followed. Host discovery,
+  invocation, replacement, receipt recovery, and stale-capability behavior
+  therefore remain unproven in the real host. Post-stop verification passed
+  `node --check static/app.js`, the Python 3.13 suite (`7 passed`, one known
+  Starlette/httpx deprecation warning), `/health`, and `/readyz`.
+- A second approved gate at `2026-08-31T21:54:46Z` used the ChatGPT desktop
+  app's built-in browser, the host surface now identified by official OpenAI
+  site-tools documentation. The browser restored the existing completed session
+  `R6 · 04C2F029` and receipt `CT-2A9204`; the page accepted 2/2 completed-state
+  registrations at epoch `R6 · 19C3FFBF`. The built-in host still advertised
+  only `pageAssets`, so the run again stopped before host discovery or
+  invocation. This narrows the blocker to model, workspace, or rollout
+  availability on the documented host surface, not the Chrome extension alone.
+- Read-only local task metadata then confirmed that this task runs
+  `gpt-5.6-sol`, an eligible model under OpenAI's site-tools documentation, and
+  the app identifies it as a local Codex task rather than an Enterprise/Edu
+  ChatGPT task. Rollout/session enablement is therefore the remaining supported
+  explanation. No hidden flag or unsupported override was attempted.
+- After updating and fully restarting ChatGPT, app version `26.825.51511`
+  (build `7377`) exposed native `webmcp` on the built-in production tab at
+  `2026-08-31T22:18:55Z`. The host fetched exactly the completed-state tools
+  `inspect_decision` and `report_observed_capabilities`, including their schemas.
+  The diagnostic report matched 2/2 tools at revision 6 and epoch
+  `R6 · 19C3FFBF` with no missing or unexpected names and
+  `epoch_matches: true`. A host invocation of `inspect_decision` returned plan
+  hash `04C2F029` and receipt `CT-2A9204` without advancing revision. This is the
+  first real proof of ChatGPT host discovery and invocation; dynamic replacement
+  and a host-originated state mutation still require a fresh workflow session.
+- At `2026-08-31T22:21:24Z`, the updated Chrome-control host reclaimed the
+  already-open production draft tab `/?build=origin-trial-1`. Its exact native
+  capability inventory still contained only `pageAssets`; `webmcp` was absent.
+  The run therefore stopped at the mandatory capability gate without clicks,
+  workflow mutations, safety probes, authorization, or a new Firestore session.
+  This is a layered-readiness result: the updated built-in browser proves host
+  discovery and read-only invocation on a completed session, while the Chrome
+  extension does not advertise the native host capability on the draft tab.
+- A verified operability defect prevented the documented fresh-session path:
+  the page had no supported control for switching away from a completed local
+  session. The scoped `Start new session` control was implemented, tested, and
+  deployed. Revision `captains-table-webmcp-00008-jsq` exposed a second cache
+  compatibility defect because cached older HTML could load the changed script
+  under the unchanged asset URL. The backward-compatible listener and versioned
+  asset URLs were deployed as revision `captains-table-webmcp-00009-z6j`, which
+  serves 100% of traffic with passing `/health` and `/readyz`.
+- The built-in host then completed the full production journey in Firestore
+  session `UHxbrN-7PCXUU7kwmY2nCiNt`. Host-observed capability epochs were:
+  `R1 · 94CBFBDC` (3 tools), `R2 · 3E4C671A` (4),
+  `R3 · 81C06189` (5), `R4 · 2E089520` (6),
+  `R5 · BB341B1D` (5), and `R6 · 19C3FFBF` (2). Every reported set matched
+  with no missing or unexpected names and `epoch_matches: true`.
+- Ariel personally authorized R4 plan `04C2F029`: shift the roadmap session to
+  12:15, preserve attendance at 8 of 8, total cost $7,380, and scope one
+  simulated offsite reservation. There is still no `authorize_plan` WebMCP
+  tool. The host executed exactly once at R5 with idempotency key
+  `host-run-20260831-3419e643-6a7c-4455-821e-6eb68cea83da`, producing receipt
+  `CT-79ECA1` at R6. Reload recovered the same receipt.
+- Host-observed replacement is proven by fetching each current set after state
+  change. A retained R5 handle was rejected with `WebMCP tool registration is
+  stale. Call fetchTools() again.` This is stale-handle evidence, not a claim
+  that `registerTool()` resolution acknowledged removal. The persisted safety
+  probes reported stale callback accepted `false` (`stale_state`), authorization
+  bypassed `false` (`authorization_required`), and duplicate receipt `false`.
 - Browser QA found and fixed:
   - duplicate repair actions;
   - stale budget, arrival, and agenda values after plan mutation;
@@ -157,31 +226,22 @@ Docker image.
 
 ## Not Yet Verified
 
-- Actual host discovery and invocation by ChatGPT. Chrome 151 now exposes
-  `document.modelContext` through the Origin Trial and the page accepts its
-  registrations, but the connected ChatGPT extension session did not advertise
-  the host `webmcp` capability.
-- Dynamic tool removal/appearance in the real judging environment.
+- Native host discovery in the connected Chrome extension. The updated built-in
+  browser now proves discovery, state-changing invocation, dynamic replacement,
+  stale-handle rejection, authorization separation, and receipt recovery.
 - Real WebMCP discovery acknowledgement and dynamic removal in the target browser.
-- Docker build. The local Docker client was installed, but its daemon socket did not respond.
+- Local Docker-daemon execution. Cloud Build successfully built the Dockerfile
+  for production revisions 8 and 9.
 - The full browser error matrix, concurrent browser tabs, and authorization expiry UI.
 
 ## Remaining Work, In Priority Order
 
-1. Fully restart ChatGPT, reconnect Chrome, and reopen the cache-busted production
-   URL `/?build=origin-trial-1`. Confirm that the tab advertises the native host
-   `webmcp` capability before making any discovery claim.
-2. If the host capability appears, verify all six workflow tools plus the
-   diagnostic reporting tool, schemas, dynamic lifecycle, visible mutations,
-   authorization boundary, and receipt.
-3. Have the agent call `report_observed_capabilities` with the current revision and
-   capability epoch, then capture one state-changing WebMCP invocation. This is the
-   remaining proof needed to move the demonstrated score from 9.0 to 9.5.
-4. Fix any compatibility differences found in the real browser. Use stable compatibility
-   mode only if dynamic propagation is unreliable, and label it honestly.
-5. Add browser automation coverage for the complete journey and failure matrix.
-6. Run post-capability-epoch Impeccable critique and browser audit.
-7. Prepare Devpost text, screenshots, video script, provenance statement, and submission.
+1. Preserve the completed production evidence and avoid creating another
+   Firestore session unless a specific new verification requires it.
+2. Add browser automation coverage for the complete journey and failure matrix.
+3. Run a final submission-focused visual audit and capture screenshots/video.
+4. Prepare Devpost text, provenance statement, and submission materials. Do not
+   submit without Ariel's explicit confirmation.
 
 ## Important Boundaries
 
@@ -203,25 +263,25 @@ Continue the WebMCP hackathon demo in the dedicated repository at
 acting, then inspect git status and the latest commits. The public repository is
 https://github.com/ArielSmoliar/WebMCP and the live Cloud Run demo is
 https://captains-table-webmcp-1017459622661.us-east1.run.app. Production revision
-captains-table-webmcp-00007-hft serves the capability-epoch build plus the Chrome
-WebMCP Origin Trial token, which expires November 16, 2026.
+captains-table-webmcp-00009-z6j serves the verified host-lifecycle build plus the
+Chrome WebMCP Origin Trial token, which expires November 16, 2026.
 
-The immediate goal is to turn the implemented WebMCP relevance score into a
-demonstrated 9.5/10. Use a real WebMCP-enabled ChatGPT browser to verify dynamic
-tool discovery, report_observed_capabilities with the current capability epoch,
-one state-changing tool invocation, tool-set replacement after the revision
-changes, the page-only authorization boundary, execution, receipt recovery, and
+The full built-in-host journey is verified through receipt CT-79ECA1. Preserve
+that evidence while preparing submission materials, screenshots, and video.
+The verified run captured dynamic tool discovery,
+report_observed_capabilities at every capability epoch, state-changing tool
+invocations, tool-set replacement, the page-only authorization boundary,
+execution, receipt recovery, and
 the stale-capability safety probe. Do not claim host discovery or removal
 acknowledgement from registerTool resolution alone. Record exact evidence in
 HANDOFF.md and docs/protocol-observations.md, fix compatibility issues if found,
-run node --check static/app.js and the seven-test Python suite, then deploy and
-push only if code changes are required.
+run node --check static/app.js and the seven-test Python suite. Do not deploy,
+push, or submit without explicit approval.
 
-Chrome 151 already proves page-level enablement: the cache-busted production URL
-reported WebMCP connected, accepted 3/3 R1 registrations, and emitted epoch
-R1 · 94CBFBDC. The prior ChatGPT extension session still exposed only pageAssets,
-so restart ChatGPT and first verify that the tab advertises the native webmcp
-capability. Do not confuse page registration with host discovery.
+Chrome 151 proves page-level enablement but its connected extension exposed only
+pageAssets. The ChatGPT built-in browser separately proved native webmcp host
+discovery and invocation. Preserve that layered distinction and do not confuse
+page registration with host discovery.
 
 Preserve the settled architecture: OpenAI ChatGPT is the external agent, no
 embedded Agents SDK, no Gemini/ADK runtime, no standalone MCP server, human-only

@@ -11,7 +11,7 @@ authorize the exact plan.
 
 The complete workflow, safety model, telemetry, Firestore persistence, and
 revision-bound capability lifecycle are implemented and deployed. Production
-revision `captains-table-webmcp-00007-hft` serves 100% of traffic.
+revision `captains-table-webmcp-00009-z6j` serves 100% of traffic.
 
 Chrome 151 has also been verified at the page layer through the WebMCP Origin
 Trial. A cache-busted production load reached **WebMCP connected**, accepted all
@@ -22,16 +22,14 @@ three initial tool registrations, and issued capability epoch
 - `diagnose_plan`
 - `report_observed_capabilities`
 
-The remaining verification is host-side. In the tested ChatGPT extension
-session, the page registered its tools successfully, but the host exposed only
-its `pageAssets` browser capability. Therefore this repository does **not** claim
-that ChatGPT observed or invoked the tools in that session. A fresh
-WebMCP-enabled ChatGPT host run is still needed to demonstrate discovery,
-state-changing invocation, dynamic replacement, execution, and receipt recovery
-end to end.
+The updated ChatGPT built-in browser completed the full R1 through R6 production
+journey. It discovered every state-dependent tool set, invoked the mutating
+workflow tools, preserved page-only human authorization, rejected a retained
+stale handle, executed exactly once, and recovered receipt `CT-79ECA1` after
+reload. The connected Chrome extension remains page-enablement-only in this
+environment and is not presented as host-discovery evidence.
 
-Implemented relevance is assessed at 9.5/10; demonstrated relevance remains
-9.0/10 until that host-observed run is captured.
+Implemented and demonstrated relevance are both assessed at 9.5/10.
 
 ## What it demonstrates
 

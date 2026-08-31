@@ -353,6 +353,23 @@ async function boot() {
   }
 }
 
+async function startNewSession() {
+  clearError();
+  setBusy(true);
+  try {
+    const snapshot = await request("/api/session", { method: "POST", body: "{}" });
+    localStorage.setItem("captains-table-session", snapshot.session_id);
+    state.snapshot = snapshot;
+    render(snapshot);
+    await registerTools();
+    $("announcer").textContent = "Fresh decision session created.";
+  } catch (error) {
+    showError(error);
+  } finally {
+    setBusy(false);
+  }
+}
+
 $("inspect").addEventListener("click", () => { void action("diagnose", {}).catch(() => {}); });
 $("compare").addEventListener("click", () => { void action("repairs", {}).catch(() => {}); });
 $("save-arrival").addEventListener("click", () => { void action("constraint", { arrival: $("arrival").value }).catch(() => {}); });
@@ -362,6 +379,7 @@ $("execute").addEventListener("click", () => { void action("execute", { idempote
 $("copy-prompt").addEventListener("click", async () => { try { await navigator.clipboard.writeText("Find the most important conflict in this offsite plan."); $("copy-prompt").textContent = "Copied"; } catch (error) { showError(error); } });
 $("retry-load").addEventListener("click", () => { window.location.reload(); });
 $("run-protocol-checks").addEventListener("click", () => { void runProtocolChecks(); });
+$("start-over")?.addEventListener("click", () => { void startNewSession(); });
 wideScreen.addEventListener("change", syncEvidenceDisclosure);
 syncEvidenceDisclosure(wideScreen);
 window.addEventListener("pagehide", () => state.controller?.abort());

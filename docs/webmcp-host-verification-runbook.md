@@ -2,14 +2,16 @@
 
 ## Metadata
 
-- **Status:** Draft
+- **Status:** Approved
 - **Owner:** Ariel Smoliar
 - **Operator:** Ariel Smoliar for the page-only authorization step; Codex for
   browser inspection, WebMCP invocation, verification, and evidence capture
-- **Last verified:** 2026-08-31 (document review only; procedure not executed)
+- **Last verified:** 2026-08-31 (completed end to end in the ChatGPT built-in
+  browser; receipt `CT-79ECA1`)
 - **Environment:** Production Cloud Run service `captains-table-webmcp`, project
-  `offsite-captain-2026`, region `us-east1`; Chrome 151 with the ChatGPT browser
-  extension; ChatGPT desktop build `26.818.61809` or later
+  `offsite-captain-2026`, region `us-east1`; the ChatGPT desktop app's built-in
+  browser, which official OpenAI documentation identifies as the supported site
+  tools surface; verified with ChatGPT desktop `26.825.51511` build `7377`
 - **Expected duration:** 30–45 minutes after the host `webmcp` capability is
   available
 - **Change/incident ID:** WebMCP host verification / demonstrated relevance 9.5
@@ -72,11 +74,13 @@ claiming host discovery or removal acknowledgement from page registration alone.
   returns `{"status":"ok"}` and `/readyz` returns `{"status":"ready"}`.
 - [ ] Production HTML contains the WebMCP Origin Trial token, and the trial has
   not passed its November 16, 2026 expiry date.
-- [ ] Chrome is version 149–156, the ChatGPT browser extension is installed and
-  enabled, and ChatGPT has been fully restarted since the extension and Origin
-  Trial were enabled.
-- [ ] The connected Chrome browser is the selected browser surface. Do not fall
-  back to an in-app or unrelated automation browser.
+- [ ] ChatGPT is using GPT-5.6 Sol or GPT-5.6 Terra, is updated to the latest
+  available desktop build, and is not operating in an Enterprise or Edu
+  workspace. Official documentation states that GPT-5.6 Luna has site tools
+  disabled and that availability also depends on rollout.
+- [ ] The ChatGPT desktop app's built-in browser is the selected browser surface.
+  Do not substitute the Chrome extension or another automation browser for the
+  documented host surface.
 - [ ] The operator opens a fresh cache-busted URL such as
   `/?build=origin-trial-1`. If local storage restores a completed session, use a
   fresh browser profile or clear only this demo's session through an approved,
@@ -143,6 +147,12 @@ claiming host discovery or removal acknowledgement from page registration alone.
 
 ## Procedure
 
+Execution approval must be recorded before Phase 2. That approval covers creation
+of one fresh Firestore session, bounded workflow mutations, persisted diagnostic
+telemetry, and the Phase 7 safety probes. It does not replace Ariel's personal
+exact-plan authorization in Phase 5 and does not authorize a public Git push,
+deployment, or Devpost submission.
+
 ### Phase 1 — Read-only repository and production preflight
 
 1. **Action:** In `/Users/arielsmoliar/Documents/ChatGPT/WebMCP`, inspect the
@@ -177,16 +187,18 @@ claiming host discovery or removal acknowledgement from page registration alone.
 
 ### Phase 2 — Browser and host capability gate
 
-1. **Action:** Connect Codex to Chrome, name the browser session, and open a
-   fresh cache-busted production tab.
-   - **Classification:** `reversible`
+1. **Action:** Connect Codex to the ChatGPT desktop app's built-in browser, name
+   the browser session, and open a fresh cache-busted production tab.
+   - **Classification:** `production change`; loading a fresh session creates a
+     durable Firestore record that this procedure does not delete
    - **Expected result:** The tab loads Captain's Table in `draft` state,
      revision 1, and displays **WebMCP connected**.
    - **Verify:** Read the visible title, URL, workflow state, revision, and
      connection label. Confirm no existing receipt was restored.
    - **If verification fails:** Stop. Do not clear broad browser data or delete
      server state. Prepare a separately approved session-isolation method.
-   - **Approval required:** None; opening the approved demo URL is authorized.
+   - **Approval required:** Gate 2. The user must approve the production
+     verification run before this phase begins.
 
 2. **Action:** Inspect the production tab's advertised capabilities.
    - **Classification:** `read-only`
@@ -214,8 +226,8 @@ claiming host discovery or removal acknowledgement from page registration alone.
 
 2. **Action:** Call `report_observed_capabilities` with the exact host-observed
    names, current revision, and current epoch.
-   - **Classification:** `reversible` (diagnostic telemetry only; workflow
-     revision must not advance)
+   - **Classification:** `production change` (diagnostic telemetry persists in
+     Firestore; workflow revision must not advance)
    - **Expected result:** The result reports no missing or unexpected tools and
      `epoch_matches: true`; the page's Agent observation changes from **Not
      reported** without advancing the workflow revision.
@@ -223,7 +235,8 @@ claiming host discovery or removal acknowledgement from page registration alone.
      and unchanged revision.
    - **If verification fails:** Stop and record the mismatch. Do not edit the
      reported list to force a match.
-   - **Approval required:** None.
+   - **Approval required:** Covered by the execution approval recorded before
+     Phase 2.
 
 3. **Action:** Call `inspect_decision`.
    - **Classification:** `read-only`
@@ -250,9 +263,10 @@ claiming host discovery or removal acknowledgement from page registration alone.
 
 2. **Action:** Fetch the tool set again using the host-supported refresh path.
    - **Classification:** `read-only`
-   - **Expected result:** The host now observes `inspect_decision`,
+   - **Expected result:** The host now observes exactly `inspect_decision`,
      `diagnose_plan`, `compare_repairs`, and
-     `report_observed_capabilities` for the new epoch.
+     `report_observed_capabilities` for the new epoch. This transition is
+     additive; it does not yet prove removal behavior.
    - **Verify:** Record the new set, revision, epoch, and the absence of tools
      that should no longer be offered. Describe this only as host-observed
      replacement, not protocol-level removal acknowledgement.
@@ -276,8 +290,9 @@ claiming host discovery or removal acknowledgement from page registration alone.
    `options` state.
    - **Classification:** `reversible` production mutation within the isolated
      session
-   - **Expected result:** Two bounded repairs appear and `select_repair` becomes
-     host-observable for the new revision.
+   - **Expected result:** Two bounded repairs appear. The host observes exactly
+     `inspect_decision`, `diagnose_plan`, `compare_repairs`, `select_repair`,
+     and `report_observed_capabilities` for the new revision.
    - **Verify:** Compare names, cost, attendance, tradeoff, revision, epoch, and
      decision trail.
    - **If verification fails:** Stop.
@@ -297,7 +312,9 @@ claiming host discovery or removal acknowledgement from page registration alone.
 
 3. **Action:** Inspect the host-observed reviewed-state tools.
    - **Classification:** `read-only`
-   - **Expected result:** `prepare_authorization` is present;
+   - **Expected result:** The host observes exactly `inspect_decision`,
+     `diagnose_plan`, `compare_repairs`, `select_repair`,
+     `prepare_authorization`, and `report_observed_capabilities`;
      `execute_authorized_plan` and `authorize_plan` are absent.
    - **Verify:** Record exact host-observed names and report them through
      `report_observed_capabilities`.
@@ -327,19 +344,25 @@ claiming host discovery or removal acknowledgement from page registration alone.
    `execute_authorized_plan` and does not include `authorize_plan`; report the
    set through `report_observed_capabilities`.
    - **Classification:** `read-only` plus reversible diagnostic telemetry
-   - **Expected result:** The set and epoch match the authorized page state.
+   - **Expected result:** The host observes exactly `inspect_decision`,
+     `diagnose_plan`, `select_repair`, `execute_authorized_plan`, and
+     `report_observed_capabilities`; the set and epoch match the authorized page
+     state.
    - **Verify:** Record exact names, revision, epoch, and zero mismatches.
    - **If verification fails:** Stop before execution.
    - **Approval required:** None.
 
 2. **Action:** Generate one unique non-sensitive idempotency key and call
    `execute_authorized_plan` exactly once.
-   - **Classification:** `reversible` simulated external action with durable
-     production receipt; the receipt itself is not deleted or rolled back
+   - **Classification:** `irreversible within this procedure`; simulated
+     external action with a durable production receipt that is not deleted or
+     rolled back
    - **Expected result:** The page enters `completed`, shows one confirmation
      receipt, and records one WebMCP execution in the decision trail.
-   - **Verify:** Compare returned and visible confirmation, revision, receipt
-     metadata, and completed-state host tool set. Confirm there is one receipt.
+   - **Verify:** Compare returned and visible confirmation, revision, and receipt
+     metadata. Confirm there is one receipt and that the completed-state host
+     observes exactly `inspect_decision` and
+     `report_observed_capabilities`.
    - **If verification fails:** Do not generate a new key or repeat execution.
      Reload first and attempt receipt recovery with the original session.
    - **Approval required:** Covered by Ariel's exact-plan authorization and the
@@ -360,8 +383,9 @@ claiming host discovery or removal acknowledgement from page registration alone.
 
 1. **Action:** Use the page's **Run safety checks** control once after receipt
    recovery.
-   - **Classification:** `reversible` diagnostic calls against the isolated
-     session; includes rejected mutation probes and idempotent receipt replay
+   - **Classification:** `production change`; diagnostic calls against the
+     isolated session persist telemetry and include rejected mutation probes
+     plus idempotent receipt replay
    - **Expected result:** Zero stale-capability mutations accepted, zero
      authorization bypasses, zero duplicate executions, and the original receipt
      remains unchanged.
@@ -493,12 +517,66 @@ claiming host discovery or removal acknowledgement from page registration alone.
 
 ## Record
 
-- **Started:** Not executed
-- **Completed:** Not executed
-- **Operator:** Not assigned for execution
-- **Approvals:** Generation and review only; no execution approval recorded
-- **Outcome:** Draft generated and statically validated
-- **Deviations:** None at generation time
-- **Follow-up:** Review this draft with Ariel before execution; update any drifted
-  versions, revisions, tool sets, commands, and approval scope
-- **Next verification:** Immediately before the next live host-verification run
+- **Started:** 2026-08-31T21:44:32Z
+- **Completed:** 2026-08-31T21:45:33Z (stopped at mandatory Phase 2 gate)
+- **Operator:** Codex; Ariel's exact-plan action was not reached
+- **Approvals:** Ariel approved one fresh Firestore session, bounded workflow
+  mutations, persisted diagnostics and safety probes, and local evidence updates.
+  Public push, deployment, and Devpost submission were not approved.
+- **Outcome:** Production preflight passed. Chrome `151.0.7922.174` loaded a
+  fresh draft at `R1 · DA4F4EFF`; the page accepted 3/3 registrations at epoch
+  `R1 · 94CBFBDC`, but the host advertised only `pageAssets`. The run stopped
+  before host discovery, invocation, page workflow mutations, authorization,
+  receipt creation, and safety probes. Post-stop JavaScript syntax, all seven
+  Python 3.13 tests, and production health/readiness checks passed.
+- **Follow-up gate:** At `2026-08-31T21:54:46Z`, an approved retry used the
+  officially documented ChatGPT built-in browser. It restored completed session
+  `R6 · 04C2F029`, accepted 2/2 page registrations at epoch
+  `R6 · 19C3FFBF`, and advertised only `pageAssets`. The retry stopped before
+  host discovery, invocation, page interaction, or additional production
+  mutation. Local task metadata confirmed eligible model `gpt-5.6-sol` and a
+  local Codex task rather than an Enterprise/Edu ChatGPT task, leaving
+  rollout/session enablement as the remaining supported blocker.
+- **Post-update continuation:** ChatGPT `26.825.51511` build `7377` advertised
+  native `webmcp` after a full restart. At `2026-08-31T22:18:55Z`, the host
+  discovered exactly the two completed-state tools, reported a matching 2/2 set
+  for revision 6 and epoch `R6 · 19C3FFBF`, and invoked
+  `inspect_decision` without advancing revision. Host discovery and read-only
+  invocation are proven; the fresh state-changing journey remains pending.
+- **Draft-tab retry:** At `2026-08-31T22:21:24Z`, the updated Chrome-control
+  host reclaimed the exact existing production draft tab
+  `/?build=origin-trial-1`. Its capability inventory contained only
+  `pageAssets`; native `webmcp` was absent. The mandatory Phase 2 gate stopped
+  the retry before clicks, host tool fetch, workflow mutation, authorization,
+  safety probes, or creation of another Firestore session. This records layered
+  readiness and is not evidence of host discovery or removal acknowledgement.
+- **Compatibility deployment:** The missing fresh-session control was confirmed
+  as an operability defect. `Start new session` was deployed in revision
+  `captains-table-webmcp-00008-jsq`. An older cached HTML page then exposed an
+  unchanged-asset-URL startup defect; backward-compatible initialization and
+  versioned asset URLs rolled forward in revision
+  `captains-table-webmcp-00009-z6j`, which serves 100% of traffic.
+- **Successful continuation:** The built-in host completed session
+  `UHxbrN-7PCXUU7kwmY2nCiNt` from R1 through R6. Exact capability epochs were
+  `R1 · 94CBFBDC`, `R2 · 3E4C671A`, `R3 · 81C06189`,
+  `R4 · 2E089520`, `R5 · BB341B1D`, and `R6 · 19C3FFBF` with tool counts
+  3, 4, 5, 6, 5, and 2. Every diagnostic comparison matched exactly.
+- **Authorization and execution:** Ariel personally authorized R4 plan
+  `04C2F029` for the 12:15 shift, $7,380 total, 8 of 8 attendance, and one
+  simulated reservation. The host executed exactly once with idempotency key
+  `host-run-20260831-3419e643-6a7c-4455-821e-6eb68cea83da`, producing receipt
+  `CT-79ECA1`. Reload recovered the same receipt in 58 ms.
+- **Replacement and safety:** The R6 host inventory contained only inspection
+  and diagnostic reporting. Calling `diagnose_plan` through the retained R5
+  handle returned `WebMCP tool registration is stale. Call fetchTools() again.`
+  Persisted probes recorded stale accepted `false`, authorization bypassed
+  `false`, and duplicate receipt `false`. This proves host-observed replacement
+  and stale rejection, not removal acknowledgement from `registerTool()`.
+- **Deviations:** The repository was intentionally dirty after the approved
+  pre-execution runbook and handoff corrections. No unplanned production action
+  occurred.
+- **Follow-up:** Preserve this completed evidence. Repeat only for a specific
+  compatibility question and never infer host discovery or removal
+  acknowledgement from page registration alone.
+- **Next verification:** When ChatGPT host enablement changes or a documented
+  supported host surface becomes available
