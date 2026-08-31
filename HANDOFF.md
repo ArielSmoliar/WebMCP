@@ -14,7 +14,7 @@ It is separate from Offsite Captain, Resurface, Flare AI, Stagehand, and loco-ag
 - Public repository: `https://github.com/ArielSmoliar/WebMCP`
 - Deployment: `https://captains-table-webmcp-pgg2be7x2a-ue.a.run.app`
 - Cloud Run service: `captains-table-webmcp`, revision
-  `captains-table-webmcp-00002-rmx`, project `offsite-captain-2026`, region
+  `captains-table-webmcp-00003-4z5`, project `offsite-captain-2026`, region
   `us-east1`
 - Firestore: deletion-protected named database `captains-table`; runtime IAM is
   conditionally restricted to that database
@@ -87,7 +87,12 @@ returns the existing receipt on replay.
 - Production Cloud Run journey reached receipt `CT-F10E26`, revision 6, and
   restored it unchanged after a fresh reload from Firestore.
 - Public `/health` returned `{"status":"ok"}` and `/readyz` returned
-  `{"status":"ready"}` on Cloud Run revision 2.
+  `{"status":"ready"}` on Cloud Run revision 3.
+- Post-deployment Impeccable audit scored 17/20. The resulting polish pass added
+  shared pending/error recovery, complete control states, and the documented
+  wide-screen protocol evidence rail. The polished local journey completed with
+  receipt `CT-FAB03F`; production revision 3 serves the new error surface and
+  polish stylesheet.
 - Browser QA found and fixed:
   - duplicate repair actions;
   - stale budget, arrival, and agenda values after plan mutation;
