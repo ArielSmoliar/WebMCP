@@ -1,5 +1,36 @@
 const state = { snapshot: null, controller: null };
 const $ = (id) => document.getElementById(id);
+const wideScreen = window.matchMedia("(min-width: 1100px)");
+
+const errorCopy = {
+  stale_state: "The plan changed before this action completed. Reload the decision and try again.",
+  invalid_state: "This action is no longer available for the current plan state.",
+  plan_changed: "The authorized version no longer matches the current plan. Review it again.",
+  authorization_required: "Review and authorize this exact plan before creating the reservation.",
+  authorization_expired: "Authorization expired. Review and authorize the current plan again.",
+  storage_error: "Persistent storage is temporarily unavailable. Try again in a moment.",
+};
+
+function setBusy(busy) {
+  $("decision").setAttribute("aria-busy", String(busy));
+  document.querySelectorAll("button").forEach((button) => { button.disabled = busy; });
+}
+
+function showError(error, bootFailure = false) {
+  const key = error?.message || "request_failed";
+  $("action-error-copy").textContent = errorCopy[key] || "The service could not complete this action. Check the connection and try again.";
+  $("retry-load").hidden = !bootFailure;
+  $("action-error").hidden = false;
+}
+
+function clearError() {
+  $("action-error").hidden = true;
+  $("retry-load").hidden = true;
+}
+
+function syncEvidenceDisclosure(event) {
+  $("technical-evidence").open = event.matches;
+}
 
 async function request(path, options = {}) {
   const response = await fetch(path, { headers: { "Content-Type": "application/json" }, ...options });
@@ -8,12 +39,21 @@ async function request(path, options = {}) {
 }
 
 async function action(route, body, source = "human") {
-  const snapshot = await request(`/api/session/${state.snapshot.session_id}/${route}`, {
-    method: "POST", body: JSON.stringify({ expected_revision: state.snapshot.revision, source, ...body })
-  });
-  render(snapshot, true);
-  await registerTools();
-  return snapshot;
+  clearError();
+  setBusy(true);
+  try {
+    const snapshot = await request(`/api/session/${state.snapshot.session_id}/${route}`, {
+      method: "POST", body: JSON.stringify({ expected_revision: state.snapshot.revision, source, ...body })
+    });
+    render(snapshot, true);
+    await registerTools();
+    return snapshot;
+  } catch (error) {
+    showError(error);
+    throw error;
+  } finally {
+    setBusy(false);
+  }
 }
 
 function toolResult(summary, data = {}) {
@@ -53,7 +93,7 @@ function render(snapshot, changed = false) {
   }
   if (snapshot.options) {
     $("comparison-body").innerHTML = comparisonRows(snapshot.options);
-    document.querySelectorAll(".select-repair").forEach((button) => button.addEventListener("click", () => action("selection", { repair_id: button.dataset.repair })));
+    document.querySelectorAll(".select-repair").forEach((button) => button.addEventListener("click", () => { void action("selection", { repair_id: button.dataset.repair }).catch(() => {}); }));
   }
   if (rank >= 3 && rank < 5) {
     const selected = snapshot.options?.find((item) => item.id === snapshot.selection);
@@ -100,18 +140,27 @@ async function registerTools() {
 }
 
 async function boot() {
+  clearError();
+  setBusy(true);
   let id = localStorage.getItem("captains-table-session");
-  try { state.snapshot = id ? await request(`/api/session/${id}`) : null; } catch { state.snapshot = null; }
-  if (!state.snapshot) { state.snapshot = await request("/api/session", { method: "POST", body: "{}" }); localStorage.setItem("captains-table-session", state.snapshot.session_id); }
-  render(state.snapshot); await registerTools();
+  try {
+    try { state.snapshot = id ? await request(`/api/session/${id}`) : null; } catch { state.snapshot = null; }
+    if (!state.snapshot) { state.snapshot = await request("/api/session", { method: "POST", body: "{}" }); localStorage.setItem("captains-table-session", state.snapshot.session_id); }
+    render(state.snapshot); await registerTools();
+  } finally {
+    setBusy(false);
+  }
 }
 
-$("inspect").addEventListener("click", () => action("diagnose", {}));
-$("compare").addEventListener("click", () => action("repairs", {}));
-$("save-arrival").addEventListener("click", () => action("constraint", { arrival: $("arrival").value }));
-$("authorize").addEventListener("click", () => action("authorize", { plan_hash: state.snapshot.plan_hash, consent: true }));
-$("revert").addEventListener("click", () => action("revert", {}));
-$("execute").addEventListener("click", () => action("execute", { idempotency_key: crypto.randomUUID() }));
-$("copy-prompt").addEventListener("click", async () => { await navigator.clipboard.writeText("Find the most important conflict in this offsite plan."); $("copy-prompt").textContent = "Copied"; });
+$("inspect").addEventListener("click", () => { void action("diagnose", {}).catch(() => {}); });
+$("compare").addEventListener("click", () => { void action("repairs", {}).catch(() => {}); });
+$("save-arrival").addEventListener("click", () => { void action("constraint", { arrival: $("arrival").value }).catch(() => {}); });
+$("authorize").addEventListener("click", () => { void action("authorize", { plan_hash: state.snapshot.plan_hash, consent: true }).catch(() => {}); });
+$("revert").addEventListener("click", () => { void action("revert", {}).catch(() => {}); });
+$("execute").addEventListener("click", () => { void action("execute", { idempotency_key: crypto.randomUUID() }).catch(() => {}); });
+$("copy-prompt").addEventListener("click", async () => { try { await navigator.clipboard.writeText("Find the most important conflict in this offsite plan."); $("copy-prompt").textContent = "Copied"; } catch (error) { showError(error); } });
+$("retry-load").addEventListener("click", () => { window.location.reload(); });
+wideScreen.addEventListener("change", syncEvidenceDisclosure);
+syncEvidenceDisclosure(wideScreen);
 window.addEventListener("pagehide", () => state.controller?.abort());
-boot().catch(() => { $("connection").textContent = "Unable to load"; });
+boot().catch((error) => { $("connection").textContent = "Unable to load"; showError(error, true); });

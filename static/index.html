@@ -7,6 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232f7f76'/%3E%3Cpath d='M8 10h16M8 16h11M8 22h16' stroke='%23f8f6f1' stroke-width='2'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/static/styles.css">
   <link rel="stylesheet" href="/static/workflow.css">
+  <link rel="stylesheet" href="/static/polish.css">
 </head>
 <body>
   <a class="skip" href="#decision">Skip to active decision</a>
@@ -50,9 +51,10 @@
       </section>
       <section id="receipt" class="workflow-region receipt" hidden aria-labelledby="receipt-title"><p class="eyebrow">Reservation confirmed</p><h3 id="receipt-title">The exact authorized plan is reserved.</h3><p class="confirmation" id="confirmation"></p><p>No duplicate action was created if this receipt was recovered.</p></section>
       <div id="next-actions" class="next-actions"><button id="execute" class="primary">Create reservation</button></div>
+      <div id="action-error" class="action-error" role="alert" hidden><strong>Action not completed</strong><p id="action-error-copy"></p><button id="retry-load" class="secondary" hidden>Reload decision</button></div>
     </section>
 
-    <details class="evidence">
+    <details id="technical-evidence" class="evidence">
       <summary>Technical evidence</summary>
       <div class="evidence-content"><p id="mode-copy"></p><h2 tabindex="-1">Decision trail</h2><ol id="events"><li>No structured actions yet.</li></ol></div>
     </details>
