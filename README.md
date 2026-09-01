@@ -2,7 +2,7 @@
 
 ![Captain's Table WebMCP hero: a shared decision workflow with human authorization and revision-bound agent tools](docs/assets/captains-table-webmcp-hero-v3.png)
 
-Captain's Table turns a fragile group decision into a shared, inspectable workflow between a human and ChatGPT—without giving the agent authority the human never granted.
+Captain's Table helps a chief of staff or offsite organizer coordinate a team's arrivals, agenda, meals, and reservations with ChatGPT. It turns a fragile group decision into a shared, inspectable workflow without giving the agent authority the human never granted.
 
 **[Open the live demo](https://captains-table-webmcp-1017459622661.us-east1.run.app/)**
 
