@@ -1,0 +1,59 @@
+#!/bin/zsh
+set -euo pipefail
+
+project_root="${0:A:h:h}"
+visual="$project_root/output/demo/captains-table-demo-visual.mp4"
+narration_text="$project_root/docs/demo-video-narration.txt"
+narration_audio="$project_root/output/demo/captains-table-narration.wav"
+final_video="$project_root/output/demo/captains-table-demo-final.mp4"
+payload="$(mktemp -t captains-table-tts.XXXXXX.json)"
+trap 'rm -f "$payload"' EXIT
+
+if [[ -f "$project_root/.env" ]]; then
+  set -a
+  source "$project_root/.env"
+  set +a
+fi
+
+if [[ -z "${OPENAI_API_KEY:-}" ]]; then
+  echo "OPENAI_API_KEY is not set." >&2
+  exit 2
+fi
+
+if [[ ! -f "$visual" ]]; then
+  echo "Missing visual master: $visual" >&2
+  exit 3
+fi
+
+jq -n --rawfile input "$narration_text" '{
+  model: "gpt-4o-mini-tts",
+  voice: "coral",
+  input: $input,
+  instructions: "Speak in a calm, precise, quietly ambitious product-demo voice. Maintain an even pace around 125 words per minute. Use brief natural pauses between paragraphs. Pronounce WebMCP as Web M C P and ChatGPT as Chat G P T.",
+  response_format: "wav"
+}' > "$payload"
+
+curl --fail-with-body --silent --show-error \
+  https://api.openai.com/v1/audio/speech \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  --data-binary "@$payload" \
+  --output "$narration_audio"
+
+/opt/homebrew/bin/ffmpeg -y \
+  -i "$visual" \
+  -i "$narration_audio" \
+  -filter_complex "[1:a]adelay=1000:all=1,apad=whole_dur=120[a]" \
+  -map 0:v:0 -map "[a]" \
+  -t 120 \
+  -c:v copy \
+  -c:a aac -b:a 192k \
+  -movflags +faststart \
+  "$final_video"
+
+/opt/homebrew/bin/ffprobe -v error \
+  -show_entries format=duration,size \
+  -of default=noprint_wrappers=1 \
+  "$final_video"
+
+echo "$final_video"

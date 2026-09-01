@@ -1,59 +1,88 @@
 # Captain's Table
 
-![Captain's Table WebMCP hero: a human-authorized planning instrument with revision-bound agent signals](docs/assets/captains-table-webmcp-hero-v2.png)
+![Captain's Table WebMCP hero: a shared decision workflow with human authorization and revision-bound agent tools](docs/assets/captains-table-webmcp-hero-v3.png)
 
-Captain's Table is a WebMCP reference application where a human and ChatGPT's
-browser agent operate one live decision surface together. The agent can inspect,
-diagnose, compare, select, and execute structured actions. Only the human can
-authorize the exact plan.
+Captain's Table turns a fragile group decision into a shared, inspectable workflow between a human and ChatGPT—without giving the agent authority the human never granted.
 
-**[Open the live Cloud Run demo](https://captains-table-webmcp-1017459622661.us-east1.run.app/)**
+**[Open the live demo](https://captains-table-webmcp-1017459622661.us-east1.run.app/)**
 
-## Current progress
+## The demo in 90 seconds
 
-The complete workflow, safety model, telemetry, Firestore persistence, and
-revision-bound capability lifecycle are implemented and deployed. Production
-revision `captains-table-webmcp-00011-cf4` serves 100% of traffic with the
-workflow-first interface.
+Eight people are meeting for an offsite. The plan looks settled, but two required attendees do not arrive until 11:40—and the roadmap session starts at 09:30.
 
-Chrome 151 has also been verified at the page layer through the WebMCP Origin
-Trial. A cache-busted production load reached **WebMCP connected**, accepted all
-three initial tool registrations, and issued capability epoch
-`R1 · 94CBFBDC` for:
+The organizer asks ChatGPT:
 
-- `inspect_decision`
-- `diagnose_plan`
-- `report_observed_capabilities`
+> Find the most important conflict in this offsite plan, compare repairs, and select the arrival-safe option.
 
-The updated ChatGPT built-in browser completed the full R1 through R6 production
-journey. It discovered every state-dependent tool set, invoked the mutating
-workflow tools, preserved page-only human authorization, rejected a retained
-stale handle, executed exactly once, and recovered receipt `CT-79ECA1` after
-reload. The connected Chrome extension remains page-enablement-only in this
-environment and is not presented as host-discovery evidence.
+ChatGPT does not scrape the page or guess what its controls mean. Through WebMCP, it follows the same live decision workflow the organizer can see:
 
-Implemented and demonstrated relevance are both assessed at 9.5/10.
+1. It inspects the plan and identifies the attendance conflict.
+2. It diagnoses which constraints actually matter.
+3. It compares viable repairs, including their schedule, attendance, and budget effects.
+4. It selects the 12:15 roadmap session: all 8 attendees can participate and the plan totals $7,380.
+5. It prepares that exact plan for review.
 
-## What it demonstrates
+Then it stops.
 
-The product demonstrates six state-aware workflow tools, one diagnostic
-capability reporting tool, dynamic registration, exact-plan human authorization,
-stale-state invalidation, durable persistence, and idempotent receipt recovery.
-The page remains fully usable when WebMCP is unavailable.
+Only the human can authorize the exact plan on the page. There is deliberately no `authorize_plan` tool. Once the organizer approves plan `04C2F029`, ChatGPT can execute it exactly once and produce receipt `CT-79ECA1`. Reloading the page recovers the same receipt instead of creating a second reservation.
 
-Every dynamic tool set is issued as a capability epoch bound to one workflow
-revision and a deterministic fingerprint. A callback retained after the page
-requests removal still carries its issuing revision, so the server rejects it
-instead of silently applying it to newer state.
+That is the full story: the agent supplies leverage, the interface preserves authority, and the system leaves durable proof of what happened.
 
-Its Protocol Lab records page-side registration acceptance, tool-set removal,
-invocation latency, stale-state rejection, authorization probes, idempotent
-replay, receipt recovery, and obsolete-callback containment. Agent discovery is
-labeled separately because current WebMCP does not acknowledge to the page which
-tools the agent can see. ChatGPT can call `report_observed_capabilities` to supply
-that missing observation explicitly.
+## Try it
 
-The six workflow tools appear as the plan advances:
+1. Open the **[production demo](https://captains-table-webmcp-1017459622661.us-east1.run.app/)** in a WebMCP-enabled ChatGPT browser.
+2. Ask:
+
+   > Find the most important conflict in this offsite plan, compare repairs, and select the arrival-safe option.
+
+3. Watch the visible workflow advance as ChatGPT inspects, diagnoses, compares, and selects.
+4. Review the proposed repair and authorize it on the page.
+5. Ask ChatGPT to create the reservation.
+6. Reload the page to see the durable receipt recovered from production storage.
+
+Without WebMCP, the application enters an explicit Manual mode. The complete human workflow remains usable.
+
+## Why this needs WebMCP
+
+This is not a chatbot placed beside a form. The human and the agent operate one live decision surface.
+
+- **Shared state:** ChatGPT works from the current server-backed plan, not a stale transcription of the page.
+- **Purpose-built actions:** tools express decision steps such as diagnose, compare, and select—not low-level clicks.
+- **A changing capability surface:** each completed step reveals only the next valid actions.
+- **A hard authority boundary:** the agent may prepare and execute, but only a human can authorize the exact plan.
+- **Visible consequences:** every agent action updates the same interface the human is reviewing.
+
+## What the proof shows
+
+The production journey advances through six revision-bound capability epochs:
+
+| Stage | Capability epoch | Agent action |
+| --- | --- | --- |
+| R1 | `94CBFBDC` | Inspect the decision |
+| R2 | `3E4C671A` | Diagnose the conflict |
+| R3 | `81C06189` | Compare repairs |
+| R4 | `2E089520` | Select the repair and wait for the human |
+| R5 | `BB341B1D` | Prepare the authorized plan for execution |
+| R6 | `19C3FFBF` | Confirm the durable outcome |
+
+Each tool set is bound to the workflow revision that issued it. If an obsolete callback is retained after the page requests removal, the server rejects it rather than applying it to newer state.
+
+The verified native-host run demonstrated:
+
+- the expected tool set at every revision;
+- page-only authorization of the exact plan hash;
+- zero accepted authorization bypasses;
+- zero accepted stale mutations;
+- zero duplicate executions; and
+- recovery of the original receipt after reload.
+
+Chrome 151 separately proves page-level WebMCP enablement for the production origin. Native host discovery and invocation were verified in ChatGPT's built-in browser. Resolution of `registerTool()` is never treated as proof that a host discovered a tool or acknowledged its removal.
+
+## How it works
+
+ChatGPT is the external agent. The page exposes state-aware tools through the WebMCP imperative API, while FastAPI validates every transition against server state. Firestore provides production persistence; Cloud Run serves the application.
+
+The workflow tools appear one stage at a time:
 
 1. `inspect_decision`
 2. `diagnose_plan`
@@ -62,23 +91,23 @@ The six workflow tools appear as the plan advances:
 5. `prepare_authorization`
 6. `execute_authorized_plan`
 
-There is deliberately no `authorize_plan` tool. Authorization is a page-only
-human action bound to the exact server-computed plan hash. Any later plan
-mutation invalidates it.
+The diagnostic tool `report_observed_capabilities` lets the agent report what it actually sees, keeping agent observation distinct from page-side registration telemetry.
 
-## Verified evidence
+There is no embedded OpenAI Agents SDK, Gemini or Google ADK runtime, or standalone MCP server. ChatGPT owns planning and invocation; the application owns workflow state, validation, authorization, persistence, and evidence.
 
-- Seven Python tests pass on Python 3.13.
-- `node --check static/app.js` passes.
-- Production state survives Cloud Run revision replacement in Firestore.
-- Receipt recovery returns the original receipt without duplicate execution.
-- The stale-capability probe accepts zero obsolete mutations.
-- The authorization probe accepts zero bypasses.
-- The idempotency probe creates zero duplicate executions.
-- The measured production protocol run recorded 121 ms median
-  mutation-to-visible-update latency.
-- Chrome Origin Trial registration enables `document.modelContext` for the exact
-  production origin through November 16, 2026.
+## Reliability and testing
+
+The Python 3.13 suite passes **20 tests**, including **13 Playwright browser cases** covering the complete lifecycle: dynamic tool replacement, page-only authorization, stale-handle rejection, idempotent execution, receipt recovery, fallback modes, and visible stale-state recovery.
+
+The deployed production smoke check passed with:
+
+- HTTP 200;
+- zero browser console errors;
+- three default proof signals;
+- technical evidence collapsed by default; and
+- no Firestore workflow mutation during the check.
+
+The workflow-first interface also completed a final 40/40 Impeccable static review.
 
 ## Run locally
 
@@ -88,38 +117,9 @@ python3 -m venv .venv
 .venv/bin/uvicorn app.main:app --reload
 ```
 
-Open `http://127.0.0.1:8000`. In a WebMCP-enabled ChatGPT browser, ask:
+Open `http://127.0.0.1:8000`.
 
-> Find the most important conflict in this offsite plan, compare repairs, and
-> select the arrival-safe option.
-
-Authorization is intentionally a page-only human action. After authorizing, ask
-ChatGPT to create the reservation.
-
-Local browsers without WebMCP support enter an explicit Manual mode; the full
-human workflow remains usable.
-
-## Verify in Chrome
-
-The production origin is enrolled in Chrome's WebMCP Origin Trial for Chrome
-149–156. With the ChatGPT browser extension connected, open this cache-busted
-URL to avoid a stale pre-token document:
-
-```text
-https://captains-table-webmcp-1017459622661.us-east1.run.app/?build=origin-trial-1
-```
-
-Treat these as separate checkpoints:
-
-1. The page reports **WebMCP connected**.
-2. Page registration resolves for the expected capability epoch.
-3. The ChatGPT host reports the tools it actually observes.
-4. A host-originated invocation advances the visible revision.
-5. The host observes the replacement tool set.
-
-The first two checkpoints do not prove the remaining three.
-
-## Test
+## Run the test suite
 
 ```bash
 .venv/bin/python -m pip install -r requirements-dev.txt
@@ -127,25 +127,13 @@ The first two checkpoints do not prove the remaining three.
 .venv/bin/python -m pytest -q
 ```
 
-The browser suite runs the complete WebMCP lifecycle against a local SQLite
-server, including dynamic tool replacement, page-only authorization, receipt
-recovery, stale-handle rejection, fallback modes, and visible stale-state recovery.
+## Evidence and documentation
 
-See [the engineering plan](docs/engineering-plan.md),
-[interaction design](docs/interaction-design.md),
-[Google Cloud deployment guide](docs/deploy-google-cloud.md),
-[protocol observations](docs/protocol-observations.md), and the
-[maintainer feedback log](docs/protocol-maintainer-feedback.md). The
-[host-verification runbook](docs/webmcp-host-verification-runbook.md) defines the
-gated procedure for completing the remaining end-to-end proof.
+- [Host verification runbook](docs/webmcp-host-verification-runbook.md)
+- [Protocol observations](docs/protocol-observations.md)
+- [Interaction design](docs/interaction-design.md)
+- [Engineering plan](docs/engineering-plan.md)
+- [Google Cloud deployment guide](docs/deploy-google-cloud.md)
+- [Protocol maintainer feedback](docs/protocol-maintainer-feedback.md)
 
-## Technology
-
-- OpenAI ChatGPT as the external browser agent
-- WebMCP imperative API through `document.modelContext`
-- FastAPI, Pydantic, Firestore in production, SQLite locally, and plain semantic
-  HTML/CSS/JavaScript
-- Google Cloud Run with a least-privilege service identity
-
-No embedded agent or second model is used. The OpenAI Agents SDK is deliberately
-absent because ChatGPT already owns agent planning and WebMCP invocation.
+Captain's Table was designed and built as a new project during the WebMCP Challenge. The repository contains the application, tests, deployment configuration, and verification evidence used for the submitted demo.
