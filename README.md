@@ -6,6 +6,8 @@ Captain's Table turns a fragile group decision into a shared, inspectable workfl
 
 **[Open the live demo](https://captains-table-webmcp-1017459622661.us-east1.run.app/)**
 
+**[Watch the two-minute demo](https://youtu.be/BKyvpIo1xt8)**
+
 ## The demo in 90 seconds
 
 Eight people are meeting for an offsite. The plan looks settled, but two required attendees do not arrive until 11:40—and the roadmap session starts at 09:30.

@@ -27,9 +27,9 @@ fi
 
 jq -n --rawfile input "$narration_text" '{
   model: "gpt-4o-mini-tts",
-  voice: "coral",
+  voice: "cedar",
   input: $input,
-  instructions: "Speak in a calm, precise, quietly ambitious product-demo voice. Maintain an even pace around 125 words per minute. Use brief natural pauses between paragraphs. Pronounce WebMCP as Web M C P and ChatGPT as Chat G P T.",
+  instructions: "Speak in a composed, intelligent, quietly confident documentary product-narration voice. Be warm but restrained, never salesy. Maintain an even, brisk-but-unhurried pace around 125 words per minute. Use brief natural pauses between paragraphs. Give subtle emphasis to conflict, human authorization, exactly once, and durable proof. Pronounce WebMCP as Web M C P and ChatGPT as Chat G P T.",
   response_format: "wav"
 }' > "$payload"
 

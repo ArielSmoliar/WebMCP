@@ -52,9 +52,17 @@ def pause(seconds: float) -> None:
     time.sleep(seconds)
 
 
-def smooth_scroll(page, selector: str) -> None:
-    page.locator(selector).scroll_into_view_if_needed()
-    pause(1.5)
+def smooth_scroll(page, selector: str, block: str = "center") -> None:
+    page.locator(selector).evaluate(
+        "(element, block) => element.scrollIntoView({behavior: 'smooth', block})",
+        block,
+    )
+    pause(1.2)
+
+
+def show_overview(page) -> None:
+    page.evaluate("window.scrollTo({top: 0, behavior: 'smooth'})")
+    pause(1.2)
 
 
 def wait_for_server(process: subprocess.Popen, port: int) -> None:
@@ -117,40 +125,51 @@ def main() -> None:
                 page = context.new_page()
                 page.goto(f"http://127.0.0.1:{port}", wait_until="networkidle")
                 expect(page.locator("#revision")).to_contain_text("R1")
-                pause(10)
+                pause(7)
 
                 invoke(page, "diagnose_plan")
                 expect(page.locator("#revision")).to_contain_text("R2")
                 smooth_scroll(page, "#finding")
-                pause(11)
+                pause(6)
 
                 invoke(page, "compare_repairs")
                 expect(page.locator("#revision")).to_contain_text("R3")
                 smooth_scroll(page, "#comparison")
-                pause(13)
+                pause(7)
 
                 invoke(page, "select_repair", {"repair_id": "shift"})
                 expect(page.locator("#revision")).to_contain_text("R4")
-                smooth_scroll(page, "#review")
-                pause(16)
+                show_overview(page)
+                pause(3)
+                smooth_scroll(page, "#review", "center")
+                pause(7)
 
                 page.locator("#authorize").click()
                 expect(page.locator("#revision")).to_contain_text("R5")
-                pause(10)
+                show_overview(page)
+                pause(5)
+                smooth_scroll(page, "#review", "center")
+                pause(3)
 
                 invoke(page, "execute_authorized_plan", {"idempotency_key": "devpost-video-001"})
                 expect(page.locator("#confirmation")).to_contain_text("CT-")
-                smooth_scroll(page, "#receipt")
-                pause(15)
+                show_overview(page)
+                pause(4)
+                smooth_scroll(page, "#receipt", "center")
+                pause(6)
 
                 page.locator("#technical-evidence > summary").click()
-                smooth_scroll(page, "#technical-evidence")
-                pause(14)
+                smooth_scroll(page, "#technical-evidence", "start")
+                pause(5)
+                smooth_scroll(page, "#events", "center")
+                pause(5)
 
                 page.reload(wait_until="networkidle")
                 expect(page.locator("#confirmation")).to_contain_text("CT-")
-                smooth_scroll(page, "#receipt")
-                pause(8)
+                show_overview(page)
+                pause(3)
+                smooth_scroll(page, "#receipt", "center")
+                pause(6)
 
                 video = page.video
                 context.close()

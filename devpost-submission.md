@@ -142,9 +142,11 @@ https://github.com/ArielSmoliar/WebMCP
 
 ## Demo Video
 
-Video URL: **TODO after recording and upload**
+YouTube URL: https://youtu.be/BKyvpIo1xt8
 
-Target length: 90 seconds. The shot-by-shot script is in `docs/demo-video-script.md`.
+Status: public, with the custom thumbnail, approved metadata, and an explicit AI-generated narration disclosure.
+
+Runtime: 2:00 with Cedar narration generated through OpenAI `gpt-4o-mini-tts`. The YouTube description must disclose that the narration is AI-generated. The shot-by-shot script is in `docs/demo-video-script.md`.
 
 ## Screenshot Shot List
 
@@ -152,6 +154,15 @@ Target length: 90 seconds. The shot-by-shot script is in `docs/demo-video-script
 2. **Repair selected, R4.** Repaired schedule, 8/8 attendance, updated $7,380 total, and the page-only authorization control. Captured against an isolated local SQLite session using the deployed code path at `docs/assets/devpost-02-human-authorization-r4.png`.
 3. **Durable outcome, R6.** Receipt `CT-79ECA1`, completion state, and the compact proof rail. Captured at `docs/assets/devpost-03-durable-outcome-r6.png`.
 4. **Protocol evidence, expanded.** The R1–R6 decision trail, 2/2 observed current tools, zero accepted stale calls, zero unauthorized executions, zero duplicate reservations, and verified receipt recovery. Captured at `docs/assets/devpost-04-protocol-evidence-r6.png`.
+
+An additional six-frame, video-synchronized set is available in `docs/assets/submission/`:
+
+1. `01-shared-decision.png`
+2. `02-conflict-diagnosed.png`
+3. `03-repairs-compared.png`
+4. `04-human-authorization.png`
+5. `05-durable-receipt.png`
+6. `06-protocol-evidence.png`
 
 ## Provenance
 
@@ -168,14 +179,14 @@ Captain's Table was created in this dedicated repository during the OpenAI WebMC
 
 - Production deployment: `captains-table-webmcp-00011-cf4`, 100% traffic.
 - Deployed code checkpoint: `b54c031`.
-- Repository checkpoint: `ee9be62`, synchronized with GitHub `main` when this draft was created.
+- Repository checkpoint: `df2602e`, synchronized with GitHub `main` before the current local media-prep changes.
 - Native-host evidence: Firestore session `UHxbrN-7PCXUU7kwmY2nCiNt`, plan `04C2F029`, receipt `CT-79ECA1`.
 - Production smoke: HTTP 200, zero console errors, three default proof signals, collapsed technical evidence, and no Firestore workflow mutation.
 - Guarded R6 screenshot capture preloaded the verified session, blocked every workflow POST, intercepted protocol telemetry, and asserted receipt `CT-79ECA1` before writing the images.
 - Logged-out checks on September 1 returned HTTP 200 for the demo, `/health`, `/readyz`, GitHub repository, and public Devpost project.
 - Official deadline: September 3, 2026 at 1:00 PM Pacific (`2026-09-03T20:00:00Z`). The entry is locked after that point.
 - Official judging criteria: WebMCP Leverage, Execution, Potential Impact, and Creativity & Ambition, each scored on a five-point scale.
-- Final submission remains blocked on the required open-source license, personal form answers, polished R4/R6 captures, public YouTube video, and explicit final user confirmation.
+- Final submission remains blocked only on the explicit final user confirmation required before the Devpost submission action.
 
 ## Known Limitations
 
@@ -194,7 +205,7 @@ Captain's Table was created in this dedicated repository during the OpenAI WebMC
 - Enter AI tools used: OpenAI Codex and ChatGPT. No embedded Agents SDK or second model runtime.
 - Confirm learning level: None, Moderate, or Significant.
 - Confirm whether the project produced career-relevant AI value: Yes or No.
-- Add a detectable open-source license file to the public repository. No license is currently present.
-- Add the final public YouTube URL. The official rules require audio and a runtime under three minutes.
-- Select and export the final R4, R6, and expanded-evidence screenshots.
+- Use the repository's MIT license, confirmed and added on September 1, 2026.
+- Use the public YouTube URL `https://youtu.be/BKyvpIo1xt8`; its description discloses the OpenAI-generated Cedar narration.
+- Select 3–5 final application screenshots from the two completed screenshot sets.
 - Obtain the user's explicit final confirmation before any Devpost submission action.

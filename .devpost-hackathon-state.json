@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "hackathon": {
+    "slug": "webmcp",
+    "name": "The WebMCP Challenge",
+    "url": "https://webmcp.devpost.com/",
+    "selected": true,
+    "source": "devpost"
+  },
+  "participant": {
+    "name": "Ariel Smoliar",
+    "display_name": "Ariel Smoliar"
+  },
+  "project": {
+    "name": "Captain's Table",
+    "summary": "Shared plans for humans and ChatGPT, with approval that cannot drift.",
+    "ai_usage": "ChatGPT is the external browser agent using page-scoped WebMCP tools.",
+    "codex_usage": "Codex supported implementation, debugging, testing, deployment, design review, and submission preparation."
+  },
+  "current_stage": "prepare-submission",
+  "completed_stages": [
+    "start-hackathon",
+    "review-hackathon-rules",
+    "resources",
+    "prepare-submission"
+  ],
+  "rules_acknowledged": true,
+  "learning": {
+    "status": "not-started",
+    "current_step": "",
+    "completed_steps": [],
+    "plan_file": "",
+    "checklist_file": ""
+  },
+  "submission": {
+    "draft_file": "devpost-submission.md",
+    "status": "drafting"
+  },
+  "next_command": "submit-project"
+}
