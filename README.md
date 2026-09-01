@@ -6,7 +6,7 @@ Captain's Table turns a fragile group decision into a shared, inspectable workfl
 
 **[Open the live demo](https://captains-table-webmcp-1017459622661.us-east1.run.app/)**
 
-**[Watch the 99-second demo](https://youtu.be/4VA0pn55vfU)**
+**[Watch the 98-second demo](https://youtu.be/h860CbsAlvI)**
 
 ## The demo in 90 seconds
 

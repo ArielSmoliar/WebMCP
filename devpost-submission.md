@@ -144,7 +144,7 @@ https://github.com/ArielSmoliar/WebMCP
 
 ## Demo Video
 
-YouTube URL: https://youtu.be/4VA0pn55vfU
+YouTube URL: https://youtu.be/h860CbsAlvI
 
 Status: public, with the custom thumbnail, approved metadata, and an explicit AI-generated narration disclosure.
 
@@ -208,6 +208,6 @@ Captain's Table was created in this dedicated repository during the OpenAI WebMC
 - Confirm learning level: None, Moderate, or Significant.
 - Confirm whether the project produced career-relevant AI value: Yes or No.
 - Use the repository's MIT license, confirmed and added on September 1, 2026.
-- Use the public YouTube URL `https://youtu.be/4VA0pn55vfU`; its description discloses the OpenAI-generated Cedar narration.
+- Use the public YouTube URL `https://youtu.be/h860CbsAlvI`; its description discloses the OpenAI-generated Cedar narration.
 - Select 3–5 final application screenshots from the two completed screenshot sets.
 - Final user confirmation was received and Devpost submission `1165732` was verified live.
