@@ -46,3 +46,14 @@ Open the deployed app, diagnose the conflict through ChatGPT, compare repairs,
 select the arrival-safe option, prepare review, change the plan to prove stale-state
 rejection, authorize the exact replacement plan through the page, execute through
 ChatGPT, and recover the persisted receipt after a repeated request.
+
+## Automated Browser Coverage
+
+`tests/test_browser.py` uses Playwright against an isolated local SQLite server.
+It mocks only the browser's `document.modelContext` registration surface; every
+workflow mutation still crosses the real HTTP API and shared browser controller.
+The suite covers the R1 through R6 tool lifecycle, human-only authorization,
+receipt recovery, stale-handle rejection, unavailable and rejected WebMCP modes,
+scoped busy feedback, visible public-error recovery, two-tab revision races,
+navigation cancellation without server mutation, and narrow reduced-motion
+layout. Production is never used.

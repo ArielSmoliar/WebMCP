@@ -121,8 +121,14 @@ The first two checkpoints do not prove the remaining three.
 ## Test
 
 ```bash
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/playwright install chromium
 .venv/bin/python -m pytest -q
 ```
+
+The browser suite runs the complete WebMCP lifecycle against a local SQLite
+server, including dynamic tool replacement, page-only authorization, receipt
+recovery, stale-handle rejection, fallback modes, and visible stale-state recovery.
 
 See [the engineering plan](docs/engineering-plan.md),
 [interaction design](docs/interaction-design.md),

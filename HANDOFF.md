@@ -102,7 +102,15 @@ returns the existing receipt on replay.
 
 ## Verification Evidence
 
-- Python 3.13: `7 passed` after the Firestore migration.
+- Python 3.13: `20 passed` after expanding the isolated Playwright browser suite.
+- `tests/test_browser.py` now covers the complete local R1 through R6 journey
+  through a mocked `document.modelContext` registration surface and the real
+  HTTP/SQLite controller path. It verifies dynamic tool replacement, absence of
+  `authorize_plan`, page-only authorization, receipt recovery, stale-handle
+  rejection, unavailable and rejected registration fallback, scoped busy state,
+  visible public-error recovery, two-tab revision races, navigation during
+  mutation without server corruption, and narrow reduced-motion layout. It does
+  not replace native ChatGPT host proof.
 - JavaScript syntax: `node --check static/app.js` passed.
 - Python compilation passed.
 - `git diff --check` passed.
@@ -269,7 +277,10 @@ Docker image.
    verify the new revision and 100% traffic, confirm the
    `impeccable-workflow-1` asset set, and run non-mutating visual/readiness smoke
    checks before any production workflow mutation.
-4. Add browser automation coverage for the complete journey and failure matrix.
+4. Extend browser automation further if time permits with server-backed expiry,
+   inventory/storage fault injection, and explicit 200% zoom assertions. The
+   current suite already covers their visible error treatment plus two-tab,
+   navigation, reduced-motion, and narrow-layout behavior.
 5. Capture submission screenshots/video and prepare Devpost text and provenance.
    Do not submit without Ariel's explicit confirmation.
 
