@@ -8,7 +8,7 @@ The dedicated local Git repository is `/Users/arielsmoliar/Documents/ChatGPT/Web
 It is separate from Offsite Captain, Resurface, Flare AI, Stagehand, and loco-agent.
 
 - Branch: `main`
-- Current checkpoint: `b54c031 test: cover browser journey and failure matrix`
+- Deployed code checkpoint: `b54c031 test: cover browser journey and failure matrix`
 - Working tree before this final handoff update: clean
 - Git remote: `https://github.com/ArielSmoliar/WebMCP.git`
 - Public repository: `https://github.com/ArielSmoliar/WebMCP`
@@ -306,11 +306,12 @@ Continue the WebMCP hackathon demo in the dedicated repository at
 /Users/arielsmoliar/Documents/ChatGPT/WebMCP. Read HANDOFF.md completely before
 acting, then inspect git status and the latest commits. The public repository is
 https://github.com/ArielSmoliar/WebMCP and the live Cloud Run demo is
-https://captains-table-webmcp-1017459622661.us-east1.run.app. GitHub `main` is
-clean through commit b54c0316b80ace37847d0157db85fe9ef75f9e21. Production
-revision captains-table-webmcp-00011-cf4 serves 100% of traffic with the
-workflow-first interface and the Chrome WebMCP Origin Trial token, which expires
-November 16, 2026.
+https://captains-table-webmcp-1017459622661.us-east1.run.app. GitHub `main`
+includes deployed code commit b54c0316b80ace37847d0157db85fe9ef75f9e21 plus
+the subsequent deployment-record documentation. Production revision
+captains-table-webmcp-00011-cf4 serves 100% of traffic with the workflow-first
+interface and the Chrome WebMCP Origin Trial token, which expires November 16,
+2026.
 
 The full built-in-host journey is verified through receipt CT-79ECA1. Preserve
 that evidence while preparing submission materials, screenshots, and video.
