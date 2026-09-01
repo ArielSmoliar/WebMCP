@@ -8,13 +8,13 @@ The dedicated local Git repository is `/Users/arielsmoliar/Documents/ChatGPT/Web
 It is separate from Offsite Captain, Resurface, Flare AI, Stagehand, and loco-agent.
 
 - Branch: `main`
-- Current checkpoint: `f0e428f polish workflow-first demo interface`
+- Current checkpoint: `b54c031 test: cover browser journey and failure matrix`
 - Working tree before this final handoff update: clean
 - Git remote: `https://github.com/ArielSmoliar/WebMCP.git`
 - Public repository: `https://github.com/ArielSmoliar/WebMCP`
 - Deployment: `https://captains-table-webmcp-1017459622661.us-east1.run.app`
 - Cloud Run service: `captains-table-webmcp`, revision
-  `captains-table-webmcp-00009-z6j`, project `offsite-captain-2026`, region
+  `captains-table-webmcp-00011-cf4`, project `offsite-captain-2026`, region
   `us-east1`
 - Firestore: deletion-protected named database `captains-table`; runtime IAM is
   conditionally restricted to that database
@@ -247,6 +247,15 @@ returns the existing receipt on replay.
   100% of traffic and the live HTML still references the pre-redesign asset
   versions. `/`, `/health`, and `/readyz` passed. Google Frontend returns 404
   specifically for `/healthz`; use `/health` and `/readyz` for live readiness.
+- Ariel then explicitly approved the push and workflow-first production release.
+  Commits `5aa90dd` and `b54c031` were pushed to GitHub `main`. The expanded
+  Python 3.13 suite passed 20 tests, including 13 Playwright browser cases.
+- Cloud Run revision `captains-table-webmcp-00011-cf4` now serves 100% of traffic
+  with the `impeccable-workflow-1` asset set. `/health` and `/readyz` passed.
+  An isolated production visual smoke loaded the real HTML/CSS/JavaScript while
+  intercepting all session API calls locally: HTTP 200, 166 ms navigation time,
+  zero console errors, exactly three default proof signals, collapsed technical
+  evidence, and no Firestore workflow mutation.
 
 The temporary Python 3.13 verification environment was
 `/private/tmp/captains-table-py313`. The workspace `.venv` uses Python 3.14 and
@@ -269,19 +278,11 @@ Docker image.
 
 1. Preserve the completed production evidence and avoid creating another
    Firestore session unless a specific new verification requires it.
-2. Decide whether to change the standing deployment rule if the committed
-   workflow-first redesign should be released. Current instructions allow
-   deployment only when a verified compatibility defect requires code changes;
-   do not infer deployment approval from generic “continue” language.
-3. If deployment is explicitly approved, deploy commit `f0e428f` to Cloud Run,
-   verify the new revision and 100% traffic, confirm the
-   `impeccable-workflow-1` asset set, and run non-mutating visual/readiness smoke
-   checks before any production workflow mutation.
-4. Extend browser automation further if time permits with server-backed expiry,
+2. Extend browser automation further if time permits with server-backed expiry,
    inventory/storage fault injection, and explicit 200% zoom assertions. The
    current suite already covers their visible error treatment plus two-tab,
    navigation, reduced-motion, and narrow-layout behavior.
-5. Capture submission screenshots/video and prepare Devpost text and provenance.
+3. Capture submission screenshots/video and prepare Devpost text and provenance.
    Do not submit without Ariel's explicit confirmation.
 
 ## Important Boundaries
@@ -295,10 +296,8 @@ Docker image.
 - Real WebMCP host discovery and invocation are verified in the ChatGPT built-in
   browser. Do not generalize that result to the Chrome extension, and do not
   claim protocol-native discovery or removal acknowledgement.
-- The public repository and current production revision are live. The committed
-  interface redesign is not deployed. Do not deploy it unless Ariel explicitly
-  changes the compatibility-defect-only deployment rule. Do not submit to Devpost
-  without explicit confirmation.
+- The public repository and workflow-first production revision are live. Do not
+  submit to Devpost without explicit confirmation.
 
 ## New Session Prompt
 
@@ -308,11 +307,10 @@ Continue the WebMCP hackathon demo in the dedicated repository at
 acting, then inspect git status and the latest commits. The public repository is
 https://github.com/ArielSmoliar/WebMCP and the live Cloud Run demo is
 https://captains-table-webmcp-1017459622661.us-east1.run.app. GitHub `main` is
-clean at commit f0e428f65ae71637249b13e585aa7e9c83cc243c. Production remains
-revision captains-table-webmcp-00009-z6j at 100% traffic; it serves the verified
-host-lifecycle build plus the Chrome WebMCP Origin Trial token, which expires
-November 16, 2026. The workflow-first interface redesign is committed but not
-deployed.
+clean through commit b54c0316b80ace37847d0157db85fe9ef75f9e21. Production
+revision captains-table-webmcp-00011-cf4 serves 100% of traffic with the
+workflow-first interface and the Chrome WebMCP Origin Trial token, which expires
+November 16, 2026.
 
 The full built-in-host journey is verified through receipt CT-79ECA1. Preserve
 that evidence while preparing submission materials, screenshots, and video.
@@ -323,10 +321,9 @@ execution, receipt recovery, and
 the stale-capability safety probe. Do not claim host discovery or removal
 acknowledgement from registerTool resolution alone. Record exact evidence in
 HANDOFF.md and docs/protocol-observations.md, fix compatibility issues if found,
-run node --check static/app.js and the seven-test Python suite. The final local
-Impeccable review is 40/40. Do not deploy the redesign unless I explicitly change
-the standing compatibility-defect-only deployment rule. Do not submit to Devpost
-without explicit confirmation.
+run node --check static/app.js and the 20-test Python suite. The final local
+Impeccable review is 40/40. Do not submit to Devpost without explicit
+confirmation.
 
 Chrome 151 proves page-level enablement but its connected extension exposed only
 pageAssets. The ChatGPT built-in browser separately proved native webmcp host

@@ -13,7 +13,8 @@ authorize the exact plan.
 
 The complete workflow, safety model, telemetry, Firestore persistence, and
 revision-bound capability lifecycle are implemented and deployed. Production
-revision `captains-table-webmcp-00009-z6j` serves 100% of traffic.
+revision `captains-table-webmcp-00011-cf4` serves 100% of traffic with the
+workflow-first interface.
 
 Chrome 151 has also been verified at the page layer through the WebMCP Origin
 Trial. A cache-busted production load reached **WebMCP connected**, accepted all
