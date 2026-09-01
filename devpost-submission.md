@@ -144,11 +144,11 @@ https://github.com/ArielSmoliar/WebMCP
 
 ## Demo Video
 
-YouTube URL: https://youtu.be/BKyvpIo1xt8
+YouTube URL: https://youtu.be/4VA0pn55vfU
 
 Status: public, with the custom thumbnail, approved metadata, and an explicit AI-generated narration disclosure.
 
-Runtime: 2:00 with Cedar narration generated through OpenAI `gpt-4o-mini-tts`. The YouTube description must disclose that the narration is AI-generated. The shot-by-shot script is in `docs/demo-video-script.md`.
+Runtime: 1:39 with Cedar narration generated through OpenAI `gpt-4o-mini-tts`. The YouTube description discloses that the narration is AI-generated. The shot-by-shot script is in `docs/demo-video-script.md`.
 
 ## Screenshot Shot List
 
@@ -208,6 +208,6 @@ Captain's Table was created in this dedicated repository during the OpenAI WebMC
 - Confirm learning level: None, Moderate, or Significant.
 - Confirm whether the project produced career-relevant AI value: Yes or No.
 - Use the repository's MIT license, confirmed and added on September 1, 2026.
-- Use the public YouTube URL `https://youtu.be/BKyvpIo1xt8`; its description discloses the OpenAI-generated Cedar narration.
+- Use the public YouTube URL `https://youtu.be/4VA0pn55vfU`; its description discloses the OpenAI-generated Cedar narration.
 - Select 3–5 final application screenshots from the two completed screenshot sets.
 - Final user confirmation was received and Devpost submission `1165732` was verified live.
