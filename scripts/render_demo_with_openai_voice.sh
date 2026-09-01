@@ -43,10 +43,10 @@ curl --fail-with-body --silent --show-error \
 /opt/homebrew/bin/ffmpeg -y \
   -i "$visual" \
   -i "$narration_audio" \
-  -filter_complex "[1:a]adelay=1000:all=1,apad=whole_dur=120[a]" \
-  -map 0:v:0 -map "[a]" \
-  -t 120 \
-  -c:v copy \
+  -filter_complex "[0:v]tpad=stop_mode=clone:stop_duration=12[v];[1:a]adelay=500:all=1[a]" \
+  -map "[v]" -map "[a]" \
+  -shortest \
+  -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p \
   -c:a aac -b:a 192k \
   -movflags +faststart \
   "$final_video"

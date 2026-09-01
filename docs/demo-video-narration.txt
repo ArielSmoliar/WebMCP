@@ -1,13 +1,13 @@
-Browser agents can move quickly, but consequential work breaks when the person and the agent act on different versions of a plan. Captain's Table gives ChatGPT and a human one live decision surface.
+Watch ChatGPT call the page's Web M C P tool. In seconds, the live plan changes from uninspected to conflict found: two required attendees arrive after the roadmap session begins.
 
-The scenario is an eight-person offsite. Two required attendees arrive after the roadmap session begins. ChatGPT inspects the live plan through page-scoped WebMCP tools and identifies that conflict without guessing through the interface.
+Captain's Table gives Chat G P T and a human one decision surface. Instead of clicking through screens or guessing from a screenshot, the agent works through explicit, page-scoped tools bound to current server state.
 
-The available tools change with the workflow. ChatGPT compares two feasible repairs, then selects the arrival-safe option: move the roadmap session to twelve fifteen. Everyone can attend, and the updated plan costs seven thousand, three hundred eighty dollars.
+ChatGPT compares two feasible repairs and selects the arrival-safe option: move the roadmap decision to twelve fifteen. Everyone can attend, and the updated plan costs seven thousand, three hundred eighty dollars.
 
-Now the authority boundary becomes visible. ChatGPT can prepare this exact version for review, but it cannot approve it. There is deliberately no authorize-plan agent tool. Only the person on the page can authorize the server-computed plan hash, and any later mutation invalidates that approval.
+Now the authority boundary becomes visible. ChatGPT can prepare this exact version for review, but it cannot approve it. No authorize-plan agent tool exists. Only the person on the page can authorize the server-computed plan hash. Any later mutation invalidates that approval.
 
-After the human authorizes, ChatGPT receives the execution tool and creates the simulated reservation. The server executes exactly once and returns receipt C T, seven nine E C A one. Reloading recovers the same receipt instead of creating a duplicate.
+After the human authorizes, the execution tool appears. ChatGPT creates the simulated reservation exactly once and receives a durable receipt. Reloading recovers that same receipt instead of creating a duplicate.
 
-The evidence rail shows why this is more than a staged workflow. Every tool set belongs to a capability epoch bound to one server revision and fingerprint. The verified ChatGPT host observed the current tools. Retained stale callbacks were rejected. Safety probes recorded zero stale mutations, zero authorization bypasses, and zero duplicate reservations.
+The final proof is intentionally a non-event. We retained an execution tool from the final review state, advanced the workflow to completion, and invoked the old tool again. The server rejected its stale revision before changing Firestore: no plan mutation, no second reservation, and no borrowed authority over newer state.
 
-Captain's Table is a reference for coordinated agency: meaningful agent action, exact human authority, and evidence both sides can inspect.
+That is what Web M C P enables here: meaningful agent action, exact human authority, and evidence both sides can inspect.
