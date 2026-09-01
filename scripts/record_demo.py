@@ -118,7 +118,7 @@ def install_agent_panel(page) -> None:
           line-height: 1.3;
         }
         #demo-agent-panel .tool {
-          margin: 0;
+          margin: 5px 0 0;
           padding: 10px 12px;
           border-radius: 8px;
           background: rgba(255,255,255,.08);
@@ -129,10 +129,22 @@ def install_agent_panel(page) -> None:
           overflow-wrap: anywhere;
         }
         #demo-agent-panel .result {
-          margin: 11px 0 0;
+          margin: 5px 0 0;
           color: #b9c6c2;
           font-size: 13px;
           line-height: 1.4;
+        }
+        #demo-agent-panel .field-label {
+          margin: 12px 0 0;
+          color: #88d7c4;
+          font-size: 10px;
+          font-weight: 750;
+          letter-spacing: .09em;
+          text-transform: uppercase;
+        }
+        #demo-agent-panel .result-label {
+          padding-top: 10px;
+          border-top: 1px solid rgba(255,255,255,.12);
         }
         """
     )
@@ -147,7 +159,9 @@ def install_agent_panel(page) -> None:
             panel.innerHTML = `
               <p class="eyebrow">ChatGPT · WebMCP</p>
               <p class="message">${message}</p>
+              <p class="field-label">ChatGPT action</p>
               <p class="tool">${tool}</p>
+              <p class="field-label result-label">Server result</p>
               <p class="result">${result}</p>`;
           };
         }
@@ -203,107 +217,110 @@ def main() -> None:
                 page.goto(f"http://127.0.0.1:{port}", wait_until="networkidle")
                 expect(page.locator("#revision")).to_contain_text("R1")
                 install_agent_panel(page)
+                timeline_start = time.monotonic()
+
+                def wait_until(second: float) -> None:
+                    pause(max(0, second - (time.monotonic() - timeline_start)))
+
                 show_agent(
                     page,
                     "Find what blocks this plan.",
-                    "Calling diagnose_plan()",
-                    "Page-scoped tool · revision R1",
+                    "diagnose_plan()",
+                    "Awaiting result · issuing revision R1",
                 )
-                pause(2)
+                wait_until(12.5)
 
                 invoke(page, "diagnose_plan")
                 expect(page.locator("#revision")).to_contain_text("R2")
                 show_agent(
                     page,
                     "Conflict found",
-                    "diagnose_plan() → R2",
-                    "Two required attendees arrive after the roadmap session begins.",
+                    "diagnose_plan()",
+                    "Conflict found · R1 → R2. Two required attendees arrive after the roadmap session begins.",
                 )
                 smooth_scroll(page, "#finding")
-                pause(5)
+                wait_until(20)
 
                 show_agent(
                     page,
                     "Compare feasible repairs.",
-                    "Calling compare_repairs()",
-                    "The available tool set changed with server state.",
+                    "compare_repairs()",
+                    "Awaiting result · issuing revision R2",
                 )
-                pause(1)
                 invoke(page, "compare_repairs")
                 expect(page.locator("#revision")).to_contain_text("R3")
                 show_agent(
                     page,
                     "Two repairs compared",
-                    "compare_repairs() → R3",
-                    "ChatGPT can reason over explicit costs and attendance tradeoffs.",
+                    "compare_repairs()",
+                    "Two repairs returned · R2 → R3. Explicit cost and attendance tradeoffs are now available.",
                 )
                 smooth_scroll(page, "#comparison")
-                pause(6)
+                wait_until(29)
 
                 show_agent(
                     page,
                     "Select the arrival-safe option.",
-                    "Calling select_repair({repair_id: 'shift'})",
-                    "Move the roadmap decision to 12:15 so all eight people can attend.",
+                    "select_repair({repair_id: 'shift'})",
+                    "Awaiting result · issuing revision R3",
                 )
-                pause(1)
                 invoke(page, "select_repair", {"repair_id": "shift"})
                 expect(page.locator("#revision")).to_contain_text("R4")
                 show_overview(page)
-                pause(2)
+                wait_until(35)
                 smooth_scroll(page, "#review", "center")
                 show_agent(
                     page,
                     "Human authorization required",
-                    "No authorize_plan tool exists",
-                    "ChatGPT can prepare the exact plan, but only the person on the page can approve its hash.",
+                    "select_repair({repair_id: 'shift'})",
+                    "Arrival-safe repair selected · R3 → R4. Only the person on the page can approve its hash.",
                 )
-                pause(7)
+                wait_until(57)
 
                 page.locator("#authorize").click()
                 expect(page.locator("#revision")).to_contain_text("R5")
                 show_agent(
                     page,
                     "Exact plan authorized by the human",
-                    "execute_authorized_plan is now available",
-                    "Authorization is bound to this revision and plan hash.",
+                    "None · page-only human action",
+                    "Authorization recorded · R4 → R5. It is bound to this revision and plan hash.",
                 )
                 show_overview(page)
-                pause(3)
+                wait_until(59)
                 smooth_scroll(page, "#review", "center")
-                pause(2)
+                wait_until(60)
 
                 show_agent(
                     page,
                     "Create the reservation.",
-                    "Calling execute_authorized_plan()",
-                    "Idempotency key: devpost-video-002",
+                    "execute_authorized_plan()",
+                    "Awaiting result · issuing revision R5 · idempotency key devpost-video-002",
                 )
-                pause(1)
+                wait_until(61)
                 invoke(page, "execute_authorized_plan", {"idempotency_key": "devpost-video-002"})
                 expect(page.locator("#confirmation")).to_contain_text("CT-")
                 show_agent(
                     page,
                     "Executed exactly once",
-                    "execute_authorized_plan() → R6",
-                    "A durable receipt was returned and can be recovered after reload.",
+                    "execute_authorized_plan()",
+                    "Reservation created · R5 → R6. A durable receipt can be recovered after reload.",
                 )
                 show_overview(page)
-                pause(3)
+                wait_until(64)
                 smooth_scroll(page, "#receipt", "center")
-                pause(6)
+                wait_until(69)
 
                 page.locator("#technical-evidence > summary").click()
                 show_agent(
                     page,
-                    "Old authority is harmless",
-                    "Retained R5 handle → rejected at R6",
-                    "No plan mutation. No second reservation. No borrowed authority over newer state.",
+                    "An outdated tool cannot reuse approval",
+                    "retained execute_authorized_plan() [R5]",
+                    "Rejected at R6. The organizer's approval cannot authorize a second reservation or a newer plan state.",
                 )
                 smooth_scroll(page, "#technical-evidence", "start")
-                pause(6)
+                wait_until(79)
                 smooth_scroll(page, "#events", "center")
-                pause(5)
+                wait_until(89)
 
                 page.reload(wait_until="networkidle")
                 expect(page.locator("#confirmation")).to_contain_text("CT-")
@@ -311,13 +328,13 @@ def main() -> None:
                 show_agent(
                     page,
                     "Same outcome after reload",
-                    "Receipt recovery verified",
-                    "The retry returns the original receipt instead of duplicating the reservation.",
+                    "None · receipt recovery",
+                    "Original receipt recovered · remains R6. No duplicate reservation was created.",
                 )
                 show_overview(page)
-                pause(2)
+                wait_until(98)
                 smooth_scroll(page, "#receipt", "center")
-                pause(6)
+                wait_until(105)
 
                 video = page.video
                 context.close()

@@ -1,6 +1,6 @@
-Watch ChatGPT call the page's Web M C P tool. In seconds, the live plan changes from uninspected to conflict found: two required attendees arrive after the roadmap session begins.
+Captain's Table helps a chief of staff coordinate a team offsite. Eight teammates have different arrival times, so one schedule change can break the agenda, meals, and reservations.
 
-Captain's Table gives Chat G P T and a human one decision surface. Instead of clicking through screens or guessing from a screenshot, the agent works through explicit, page-scoped tools bound to current server state.
+Watch Chat G P T call the page's Web M C P tool. It finds that two required attendees arrive after the roadmap session begins. The organizer and Chat G P T now share one live decision surface, backed by explicit page-scoped tools and current server state.
 
 ChatGPT compares two feasible repairs and selects the arrival-safe option: move the roadmap decision to twelve fifteen. Everyone can attend, and the updated plan costs seven thousand, three hundred eighty dollars.
 
@@ -10,4 +10,4 @@ After the human authorizes, the execution tool appears. ChatGPT creates the simu
 
 The final proof is intentionally a non-event. We retained an execution tool from the final review state, advanced the workflow to completion, and invoked the old tool again. The server rejected its stale revision before changing Firestore: no plan mutation, no second reservation, and no borrowed authority over newer state.
 
-That is what Web M C P enables here: meaningful agent action, exact human authority, and evidence both sides can inspect.
+Captain's Table gives a chief of staff a practical way to coordinate an offsite with Chat G P T. The agent can analyze and execute through Web M C P, while the organizer keeps exact control of what is approved. One shared plan, one durable record, and an outdated tool that cannot reuse the organizer's approval.

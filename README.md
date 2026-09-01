@@ -6,9 +6,9 @@ Captain's Table turns a fragile group decision into a shared, inspectable workfl
 
 **[Open the live demo](https://captains-table-webmcp-1017459622661.us-east1.run.app/)**
 
-**[Watch the 98-second demo](https://youtu.be/h860CbsAlvI)**
+**[Watch the 1:54 demo](https://youtu.be/5sASgRzem2Q)**
 
-## The demo in 90 seconds
+## The demo in under two minutes
 
 Eight people are meeting for an offsite. The plan looks settled, but two required attendees do not arrive until 11:40—and the roadmap session starts at 09:30.
 
@@ -16,7 +16,7 @@ The organizer asks ChatGPT:
 
 > Find the most important conflict in this offsite plan, compare repairs, and select the arrival-safe option.
 
-ChatGPT does not scrape the page or guess what its controls mean. Through WebMCP, it follows the same live decision workflow the organizer can see:
+ChatGPT does not scrape the page or guess what its controls mean. Through WebMCP, it follows the same live decision workflow the organizer can see. The demo labels each named tool call as the **ChatGPT action** and each authoritative outcome as the **Server result**:
 
 1. It inspects the plan and identifies the attendance conflict.
 2. It diagnoses which constraints actually matter.
@@ -29,6 +29,8 @@ Then it stops.
 Only the human can authorize the exact plan on the page. There is deliberately no `authorize_plan` tool. Once the organizer approves plan `04C2F029`, ChatGPT can execute it exactly once and produce receipt `CT-79ECA1`. Reloading the page recovers the same receipt instead of creating a second reservation.
 
 That is the full story: the agent supplies leverage, the interface preserves authority, and the system leaves durable proof of what happened.
+
+The final safety check deliberately calls an outdated R5 execution tool after the workflow reaches R6. The server rejects it before any mutation: an outdated tool cannot reuse the organizer's approval.
 
 ## Try it
 

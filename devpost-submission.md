@@ -14,13 +14,13 @@ Shared plans for humans and ChatGPT, with approval that cannot drift.
 
 Browser agents can act quickly, but consequential workflows become unsafe when the agent and the person are looking at different versions of the truth. A stale suggestion can overwrite a newer decision. A broad approval can outlive the plan it was meant to authorize. A retried action can execute twice. Most demos hide those failure modes behind a chat transcript.
 
-Captain's Table makes them visible. Its demonstration scenario is an eight-person offsite plan with a schedule conflict, but the product thesis is broader: people and browser agents need one shared, inspectable decision surface with explicit authority boundaries.
+Captain's Table helps a chief of staff or offsite organizer coordinate eight teammates' arrivals, agenda, meals, and reservations. The demonstration begins with a schedule conflict, but the product thesis is broader: people and browser agents need one shared, inspectable decision surface with explicit authority boundaries.
 
 ## Solution
 
-Captain's Table is a workflow-first WebMCP application. ChatGPT is the external browser agent. The page exposes state-aware tools for inspecting a decision, diagnosing the conflict, comparing repairs, selecting a repair, preparing an exact authorization, and executing the authorized plan.
+Captain's Table is a workflow-first WebMCP application. ChatGPT is the external browser agent. The page exposes state-aware tools for inspecting a decision, diagnosing the conflict, comparing repairs, selecting a repair, preparing an exact authorization, and executing the authorized plan. The demo separates each named **ChatGPT action** from its authoritative **Server result**; for example, `diagnose_plan()` is the action, while `Conflict found · R1 → R2` is the outcome and revision transition.
 
-The server is authoritative. Every mutation carries an expected revision. Each visible tool set belongs to a capability epoch bound to that revision and a deterministic fingerprint. If the workflow advances from R5 to R6 while the host still retains an old R5 execution callback, that callback continues to identify itself as R5. The server compares its issuing revision with current state and rejects it before any mutation. In other words, obsolete authority may remain callable in the agent's memory, but it cannot act on a newer plan. Only the human can authorize the exact server-computed plan hash, and there is deliberately no `authorize_plan` agent tool. Execution is idempotent and returns the original receipt on replay.
+The server is authoritative. Every mutation carries an expected revision. Each visible tool set belongs to a capability epoch bound to that revision and a deterministic fingerprint. If the workflow advances from R5 to R6 while the host still retains an old R5 execution callback, that callback continues to identify itself as R5. The server compares its issuing revision with current state and rejects it before any mutation. An outdated tool cannot reuse the organizer's approval, create a second reservation, or act on a newer plan. Only the human can authorize the exact server-computed plan hash, and there is deliberately no `authorize_plan` agent tool. Execution is idempotent and returns the original receipt on replay.
 
 ## Why This Matters
 
@@ -80,7 +80,7 @@ The hardest problem was proving the right thing. A page can accept registrations
 
 Dynamic tools created a second challenge: removal propagation is not acknowledged to the page. A resolved `registerTool()` call does not prove host discovery, and the page receives no reliable confirmation that an obsolete tool was removed from the host. Client-side removal therefore cannot be the safety boundary.
 
-The solution was server-enforced capability epochs. We deliberately retained an execution tool issued during the final review state (revision R5). After the authorized plan executed and the workflow advanced to its completed state (revision R6), we invoked that old tool again. Its R5 issuing revision traveled with the call, so the R6 server rejected it as stale before changing Firestore. The visible result is intentionally a non-event: no plan mutation, no second reservation, and no borrowed authority over the newer state. This is the central safety proof—old authority can survive in memory without remaining effective.
+The solution was server-enforced capability epochs. We deliberately retained an execution tool issued during the final review state (revision R5). After the authorized plan executed and the workflow advanced to its completed state (revision R6), we invoked that old tool again. Its R5 issuing revision traveled with the call, so the R6 server rejected it as stale before changing Firestore. The visible result is intentionally a non-event: no plan mutation and no second reservation. This is the central safety proof: an outdated tool cannot reuse the organizer's approval.
 
 Production introduced practical edge cases too: cached HTML briefly loaded incompatible JavaScript, and a completed session originally had no supported way to begin again. We added versioned assets, a backward-compatible listener, and a scoped new-session control, then verified the corrected behavior on Cloud Run.
 
@@ -144,11 +144,11 @@ https://github.com/ArielSmoliar/WebMCP
 
 ## Demo Video
 
-YouTube URL: https://youtu.be/h860CbsAlvI
+YouTube URL: https://youtu.be/5sASgRzem2Q
 
 Status: public, with the custom thumbnail, approved metadata, and an explicit AI-generated narration disclosure.
 
-Runtime: 1:39 with Cedar narration generated through OpenAI `gpt-4o-mini-tts`. The YouTube description discloses that the narration is AI-generated. The shot-by-shot script is in `docs/demo-video-script.md`.
+Runtime: 1:54 with Cedar narration generated through OpenAI `gpt-4o-mini-tts`. The YouTube description discloses that the narration is AI-generated. The shot-by-shot script is in `docs/demo-video-script.md`.
 
 ## Screenshot Shot List
 
@@ -208,6 +208,6 @@ Captain's Table was created in this dedicated repository during the OpenAI WebMC
 - Confirm learning level: None, Moderate, or Significant.
 - Confirm whether the project produced career-relevant AI value: Yes or No.
 - Use the repository's MIT license, confirmed and added on September 1, 2026.
-- Use the public YouTube URL `https://youtu.be/h860CbsAlvI`; its description discloses the OpenAI-generated Cedar narration.
+- Use the public YouTube URL `https://youtu.be/5sASgRzem2Q`; its description discloses the OpenAI-generated Cedar narration.
 - Select 3–5 final application screenshots from the two completed screenshot sets.
 - Final user confirmation was received and Devpost submission `1165732` was verified live.

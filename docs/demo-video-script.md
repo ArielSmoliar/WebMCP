@@ -1,12 +1,12 @@
 # Captain's Table Two-Minute Demo
 
-Target runtime: 1:40–1:50. Record the full 1440×900 browser viewport. Use a compact agent-activity panel for tool names and results; do not add sentence-by-sentence captions. Narration should sound calm, precise, quietly ambitious, and trustworthy.
+Target runtime: 1:50–1:55. Record the full 1440×900 browser viewport. Use a compact agent-activity panel for tool names and results; do not add sentence-by-sentence captions. Narration should sound calm, precise, quietly ambitious, and trustworthy.
 
 ## Narration
 
-Watch ChatGPT call the page's Web M C P tool. In seconds, the live plan changes from uninspected to conflict found: two required attendees arrive after the roadmap session begins.
+Captain's Table helps a chief of staff coordinate a team offsite. Eight teammates have different arrival times, so one schedule change can break the agenda, meals, and reservations.
 
-Captain's Table gives Chat G P T and a human one decision surface. Instead of clicking through screens or guessing from a screenshot, the agent works through explicit, page-scoped tools bound to current server state.
+Watch Chat G P T call the page's Web M C P tool. It finds that two required attendees arrive after the roadmap session begins. The organizer and Chat G P T now share one live decision surface, backed by explicit page-scoped tools and current server state.
 
 ChatGPT compares two feasible repairs and selects the arrival-safe option: move the roadmap decision to twelve fifteen. Everyone can attend, and the updated plan costs seven thousand, three hundred eighty dollars.
 
@@ -16,19 +16,20 @@ After the human authorizes, the execution tool appears. ChatGPT creates the simu
 
 The final proof is intentionally a non-event. We retained an execution tool from the final review state, advanced the workflow to completion, and invoked the old tool again. The server rejected its stale revision before changing Firestore: no plan mutation, no second reservation, and no borrowed authority over newer state.
 
-That is what Web M C P enables here: meaningful agent action, exact human authority, and evidence both sides can inspect.
+Captain's Table gives a chief of staff a practical way to coordinate an offsite with Chat G P T. The agent can analyze and execute through Web M C P, while the organizer keeps exact control of what is approved. One shared plan, one durable record, and an outdated tool that cannot reuse the organizer's approval.
 
 ## Timed Visual Run
 
 | Time | Browser action |
 |---|---|
-| 0:00–0:10 | Start on the working product. Show `ChatGPT · WebMCP` calling `diagnose_plan()` and the page advancing to Conflict found. |
-| 0:10–0:27 | Show `compare_repairs()` and both repair tradeoffs. |
-| 0:27–0:43 | Show `select_repair({repair_id: 'shift'})`, the repaired plan, and 8/8 attendance. |
-| 0:43–1:00 | Show that no `authorize_plan` tool exists; the human authorizes the exact plan on the page. |
-| 1:00–1:19 | Show `execute_authorized_plan()`, the R6 receipt, and exactly-once outcome. |
-| 1:19–1:38 | Expand Technical evidence and explain the retained R5 handle rejected at R6. |
-| 1:38–1:48 | Reload and finish on the recovered receipt. |
+| 0:00–0:12 | Establish the chief of staff's offsite plan while the working product and eight-person schedule remain visible. |
+| 0:12–0:20 | Show `ChatGPT · WebMCP` calling `diagnose_plan()` and the page advancing to Conflict found. |
+| 0:20–0:29 | Show `compare_repairs()` and both repair tradeoffs. |
+| 0:29–0:41 | Show `select_repair({repair_id: 'shift'})`, the repaired plan, and 8/8 attendance. |
+| 0:41–0:57 | Show that no `authorize_plan` tool exists and hold on the page-only authorization control. |
+| 0:57–1:09 | The human authorizes the exact plan; then show `execute_authorized_plan()` and its durable receipt. |
+| 1:09–1:29 | Expand Technical evidence as the retained R5 handle is rejected at R6. |
+| 1:29–1:54 | Reload and finish on the recovered receipt while the organizer/ChatGPT roles are summarized. |
 
 ## Production Notes
 
