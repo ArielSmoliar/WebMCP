@@ -43,7 +43,7 @@ The page exposes six imperative workflow tools as the plan advances:
 
 A seventh diagnostic tool, `report_observed_capabilities`, lets ChatGPT report the tool set it actually sees. The Protocol Lab compares that agent-reported set with the page's expected registration set. This keeps page-side registration, host discovery, and host invocation as separate claims.
 
-The verified ChatGPT built-in-browser run observed all six capability epochs, performed state-changing invocations, respected page-only authorization, executed exactly once, recovered the same receipt after reload, and rejected a retained stale handle. Chrome 151 separately proved page-level WebMCP enablement through the Origin Trial; it is not presented as host-discovery evidence.
+The verified ChatGPT built-in-browser run observed all six capability epochs. R1–R6 are the six successive server revisions in the demonstrated workflow, from initial inspection through completed reservation. ChatGPT performed state-changing invocations, respected page-only authorization, executed exactly once, recovered the same receipt after reload, and rejected a retained stale handle. Chrome 151 separately proved page-level WebMCP enablement through the Origin Trial; it is not presented as host-discovery evidence.
 
 ## How We Used Codex
 
@@ -80,7 +80,7 @@ The hardest problem was proving the right thing. A page can accept registrations
 
 Dynamic tools created a second challenge: removal propagation is not acknowledged to the page. A resolved `registerTool()` call does not prove host discovery, and the page receives no reliable confirmation that an obsolete tool was removed from the host. Client-side removal therefore cannot be the safety boundary.
 
-The solution was server-enforced capability epochs. We deliberately retained the R5 execution handle after the workflow advanced to R6 and invoked it again. Its R5 issuing revision traveled with the call; the R6 server rejected it as stale before changing Firestore. The visible result is intentionally a non-event: no plan mutation, no second reservation, and no borrowed authority over the newer state. This is the central safety proof—old authority can survive in memory without remaining effective.
+The solution was server-enforced capability epochs. We deliberately retained an execution tool issued during the final review state (revision R5). After the authorized plan executed and the workflow advanced to its completed state (revision R6), we invoked that old tool again. Its R5 issuing revision traveled with the call, so the R6 server rejected it as stale before changing Firestore. The visible result is intentionally a non-event: no plan mutation, no second reservation, and no borrowed authority over the newer state. This is the central safety proof—old authority can survive in memory without remaining effective.
 
 Production introduced practical edge cases too: cached HTML briefly loaded incompatible JavaScript, and a completed session originally had no supported way to begin again. We added versioned assets, a backward-compatible listener, and a scoped new-session control, then verified the corrected behavior on Cloud Run.
 
