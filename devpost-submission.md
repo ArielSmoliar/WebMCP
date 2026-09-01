@@ -20,7 +20,7 @@ Captain's Table makes them visible. Its demonstration scenario is an eight-perso
 
 Captain's Table is a workflow-first WebMCP application. ChatGPT is the external browser agent. The page exposes state-aware tools for inspecting a decision, diagnosing the conflict, comparing repairs, selecting a repair, preparing an exact authorization, and executing the authorized plan.
 
-The server is authoritative. Every mutation carries an expected revision. Each visible tool set belongs to a capability epoch bound to that revision and a deterministic fingerprint. If the page changes, a retained old callback cannot acquire authority over the new state. Only the human can authorize the exact server-computed plan hash, and there is deliberately no `authorize_plan` agent tool. Execution is idempotent and returns the original receipt on replay.
+The server is authoritative. Every mutation carries an expected revision. Each visible tool set belongs to a capability epoch bound to that revision and a deterministic fingerprint. If the workflow advances from R5 to R6 while the host still retains an old R5 execution callback, that callback continues to identify itself as R5. The server compares its issuing revision with current state and rejects it before any mutation. In other words, obsolete authority may remain callable in the agent's memory, but it cannot act on a newer plan. Only the human can authorize the exact server-computed plan hash, and there is deliberately no `authorize_plan` agent tool. Execution is idempotent and returns the original receipt on replay.
 
 ## Why This Matters
 
@@ -78,7 +78,9 @@ There is no embedded OpenAI Agents SDK, Gemini or Google ADK runtime, or standal
 
 The hardest problem was proving the right thing. A page can accept registrations while the host still cannot discover them, so we built explicit agent-reported capability evidence and kept Chrome page enablement separate from ChatGPT native-host discovery.
 
-Dynamic tools created a second challenge: removal propagation is not acknowledged to the page. The solution was server-enforced capability epochs. Even if a host retains an obsolete callback, its issuing revision travels with it and the server rejects the mutation as stale.
+Dynamic tools created a second challenge: removal propagation is not acknowledged to the page. A resolved `registerTool()` call does not prove host discovery, and the page receives no reliable confirmation that an obsolete tool was removed from the host. Client-side removal therefore cannot be the safety boundary.
+
+The solution was server-enforced capability epochs. We deliberately retained the R5 execution handle after the workflow advanced to R6 and invoked it again. Its R5 issuing revision traveled with the call; the R6 server rejected it as stale before changing Firestore. The visible result is intentionally a non-event: no plan mutation, no second reservation, and no borrowed authority over the newer state. This is the central safety proof—old authority can survive in memory without remaining effective.
 
 Production introduced practical edge cases too: cached HTML briefly loaded incompatible JavaScript, and a completed session originally had no supported way to begin again. We added versioned assets, a backward-compatible listener, and a scoped new-session control, then verified the corrected behavior on Cloud Run.
 
@@ -186,7 +188,7 @@ Captain's Table was created in this dedicated repository during the OpenAI WebMC
 - Logged-out checks on September 1 returned HTTP 200 for the demo, `/health`, `/readyz`, GitHub repository, and public Devpost project.
 - Official deadline: September 3, 2026 at 1:00 PM Pacific (`2026-09-03T20:00:00Z`). The entry is locked after that point.
 - Official judging criteria: WebMCP Leverage, Execution, Potential Impact, and Creativity & Ambition, each scored on a five-point scale.
-- Final submission remains blocked only on the explicit final user confirmation required before the Devpost submission action.
+- Devpost submission `1165732` was verified live on September 1, 2026. The project remains editable until the official deadline.
 
 ## Known Limitations
 
@@ -208,4 +210,4 @@ Captain's Table was created in this dedicated repository during the OpenAI WebMC
 - Use the repository's MIT license, confirmed and added on September 1, 2026.
 - Use the public YouTube URL `https://youtu.be/BKyvpIo1xt8`; its description discloses the OpenAI-generated Cedar narration.
 - Select 3–5 final application screenshots from the two completed screenshot sets.
-- Obtain the user's explicit final confirmation before any Devpost submission action.
+- Final user confirmation was received and Devpost submission `1165732` was verified live.
