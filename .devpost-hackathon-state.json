@@ -17,12 +17,13 @@
     "ai_usage": "ChatGPT is the external browser agent using page-scoped WebMCP tools.",
     "codex_usage": "Codex supported implementation, debugging, testing, deployment, design review, and submission preparation."
   },
-  "current_stage": "prepare-submission",
+  "current_stage": "submit-project",
   "completed_stages": [
     "start-hackathon",
     "review-hackathon-rules",
     "resources",
-    "prepare-submission"
+    "prepare-submission",
+    "submit-project"
   ],
   "rules_acknowledged": true,
   "learning": {
@@ -34,7 +35,9 @@
   },
   "submission": {
     "draft_file": "devpost-submission.md",
-    "status": "drafting"
+    "status": "submitted",
+    "submission_id": 1165732,
+    "url": "https://devpost.com/software/captain-s-table"
   },
-  "next_command": "submit-project"
+  "next_command": "hackathon-map"
 }
