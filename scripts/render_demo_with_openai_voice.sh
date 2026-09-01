@@ -2,6 +2,7 @@
 set -euo pipefail
 
 project_root="${0:A:h:h}"
+silent="$project_root/output/demo/captains-table-demo-silent.webm"
 visual="$project_root/output/demo/captains-table-demo-visual.mp4"
 narration_text="$project_root/docs/demo-video-narration.txt"
 narration_audio="$project_root/output/demo/captains-table-narration.wav"
@@ -20,10 +21,20 @@ if [[ -z "${OPENAI_API_KEY:-}" ]]; then
   exit 2
 fi
 
-if [[ ! -f "$visual" ]]; then
-  echo "Missing visual master: $visual" >&2
+if [[ ! -f "$silent" ]]; then
+  echo "Missing silent recording: $silent" >&2
   exit 3
 fi
+
+# Playwright's recorder starts before Chromium produces its first painted frame.
+# Remove that blank capture preroll so the demo opens on the working product.
+/opt/homebrew/bin/ffmpeg -y \
+  -ss 5.5 \
+  -i "$silent" \
+  -an \
+  -c:v libx264 -preset medium -crf 20 -pix_fmt yuv420p \
+  -movflags +faststart \
+  "$visual"
 
 jq -n --rawfile input "$narration_text" '{
   model: "gpt-4o-mini-tts",
